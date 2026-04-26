@@ -1,0 +1,50 @@
+protein:
+  name: "t4l_171l"
+  pdb_path: "inputs/t4l_171l/171L.pdb"
+  chain: "A"
+  wt_sequence: "MNIFEMLRIDEGLRLKIYKDTEGYYTIGIGHLLTKSPSLNAAKSALDKAIGRNTNGVITKDEAEKLFNQDVDAAVRGILRNAKLKPVYDSLDAVRRAALINMVFQMGETGVAGFTNSLRMLQQKRWDEAAVNLAKSRWYNQTPNRAKRVITTFRTGTWDAYK"
+  catalytic_positions: [11, 20, 26]
+  protected_positions: [11, 20, 26]
+
+generation:
+  design_positions: [88, 126, 139, 158]
+  num_seq_per_target: 20
+  sampling_temp: "0.1 0.2"
+  seed: 42
+  batch_size: 1
+  use_soluble_model: true
+  esm_if:
+    enabled: true
+    num_samples: 8
+    temperature: 1.0e-6
+    nogpu: true
+
+method:
+  oxidation_min_sasa: 25.0
+  oxidation_min_dist_protected: 8.0
+  flexible_surface_min_sasa: 40.0
+  score_weights:
+    oxidation: 1.0
+    surface: 1.0
+    manual: 1.0
+    evolution: 1.0
+    burden: 1.0
+  manual_bias:
+    88:
+      F: 1.2
+    126:
+      F: 1.6
+      Y: 0.8
+    139:
+      F: 1.2
+    158:
+      F: 1.6
+      Y: 0.8
+
+evolution:
+  homologs_fasta: "datasets/benchmark_pool/t4_lysozyme/homologs.fasta"
+  aligned_fasta: ""
+  min_identity: 0.2
+
+benchmark:
+  family: "lysozyme"

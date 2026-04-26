@@ -1,0 +1,21 @@
+target_id: example_target
+protein_name: Example Protein
+family: example_family
+organism: Example organism
+reference_pdb: XXXX
+structure_path: inputs/example/example.pdb
+wt_fasta_path: datasets/benchmark_pool/example_target/wt.fasta
+homologs_path: datasets/benchmark_pool/example_target/homologs.fasta
+assay: Example assay
+assay_readout: residual activity or fluorescence
+role: benchmark
+freeze_validation_tier: secondary
+protected_positions: []
+catalytic_positions: []
+disulfide_pairs: []
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: []
+notes:
+  - Fill this file when collecting a new benchmark target.
+  - Keep positions in reference sequence numbering.

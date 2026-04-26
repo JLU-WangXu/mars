@@ -1,0 +1,48 @@
+protein:
+  name: "petase_5xfy"
+  pdb_path: "inputs/petase_5xfy/5XFY.pdb"
+  chain: "A"
+  wt_sequence: "NPYARGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCS"
+  catalytic_positions: [131, 177, 208]
+  protected_positions: [58, 103, 131, 156, 174, 177, 208, 210, 244, 260]
+
+generation:
+  design_positions: [3, 40, 41, 117]
+  num_seq_per_target: 20
+  sampling_temp: "0.1 0.2"
+  seed: 42
+  batch_size: 1
+  use_soluble_model: true
+  esm_if:
+    enabled: true
+    num_samples: 8
+    temperature: 1.0e-6
+    nogpu: true
+
+method:
+  oxidation_min_sasa: 25.0
+  oxidation_min_dist_protected: 8.0
+  flexible_surface_min_sasa: 40.0
+  score_weights:
+    oxidation: 1.0
+    surface: 1.0
+    manual: 1.0
+    evolution: 1.0
+    burden: 1.0
+  manual_bias:
+    3:
+      F: 1.2
+    40:
+      F: 1.2
+    41:
+      F: 1.2
+    117:
+      F: 1.2
+
+evolution:
+  homologs_fasta: "datasets/benchmark_pool/petase_ispetase/homologs.fasta"
+  aligned_fasta: ""
+  min_identity: 0.2
+
+benchmark:
+  family: "cutinase"

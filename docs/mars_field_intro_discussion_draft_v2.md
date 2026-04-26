@@ -1,0 +1,19 @@
+# MARS-FIELD Introduction and Discussion Draft v2
+
+## Introduction
+
+Protein engineering pipelines often combine structural analysis, evolutionary priors, ancestral reconstruction, and machine-learning proposal engines as loosely connected modules. This modularity is operationally useful, but it creates a conceptual weakness: the system behaves as a collection of partially redundant signals rather than as a unified controller. The problem becomes more severe when the target objective is not simply sequence plausibility but robust engineering under multiple constraints, including oxidation risk, flexible-surface burden, motif preservation, and environment-conditioned stress.
+
+`MARS-FIELD` addresses this problem by treating protein engineering as an evidence-to-sequence control task. Structural, phylogenetic, ancestral, retrieval-based, and environment-conditioned signals are projected into a shared residue field over the design positions. This field, rather than a candidate list, is the native decision object of the method. It defines residue-wise preferences and pairwise couplings, and these quantities are used both to evaluate incumbent candidates and to decode new ones under explicit engineering constraints.
+
+The current implementation goes beyond a rerank-only architecture in two ways. First, ancestry and retrieval are represented as learned memory-linked branches inside the controller. Second, the neural branch is active at decode time in the main benchmark path. The resulting system is therefore not only a candidate reranker, but a field-controller-decoder architecture. We do not claim that this is yet the final fully joint proposal-generator / field / decoder model. Instead, we ask whether a unified evidence-conditioned controller can already be made benchmark-stable, mechanistically interpretable, and capable of decode-time neural proposal generation.
+
+## Discussion
+
+The main conclusion of this study is that a shared residue-field controller provides a more coherent basis for protein engineering than an ensemble of disconnected proposal branches. In the present implementation, `MARS-FIELD` integrates heterogeneous evidence streams into a common residue field, uses a calibrated neural controller to score candidates, and activates a decode-time neural branch inside the main benchmark path. This is qualitatively different from earlier stack-and-rerank pipelines because the neural branch now participates in generation as well as selection.
+
+An important feature of the current results is stability. The final controller improves paired policy score on most targets while maintaining an approximately neutral panel-level mean delta after neural decoder integration. This indicates that a more ambitious controller-decoder architecture can be inserted into the benchmark without causing broad collapse. At the same time, retained neural-decoder candidates appear only on a subset of targets, implying that the decoder is selective rather than indiscriminate.
+
+The remaining failures are also informative. The current regressions are concentrated in a small number of calibration-limited targets rather than distributed broadly across the panel. This is consistent with a method that is fundamentally viable but not yet fully optimized. In particular, the current implementation still relies on staged supervision and a hybrid final policy, and therefore should not be described as the final fully joint protein design model.
+
+We therefore view `MARS-FIELD` as a bridge architecture. It is more unified than a heuristic engineering stack, more honest than a claim of fully joint optimization, and already strong enough to support a methods paper built around a shared residue-field controller, decode-time neural proposal generation, and panel-level benchmark stability.

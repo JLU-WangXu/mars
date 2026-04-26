@@ -1,0 +1,12 @@
+topic:
+  enabled: true
+  name: "cld"
+  cld:
+    functional_shell_positions: [152, 189, 190, 201, 204, 211, 217, 230, 254, 261]
+    oxidation_guard_positions: [189, 190, 261]
+    distal_gate_positions: [217]
+    proximal_network_positions: [204, 254]
+    buried_sasa_max: 20.0
+    profile_prior_scale: 0.35
+    asr_prior_scale: 0.55
+    family_prior_scale: 0.55

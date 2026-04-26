@@ -1,0 +1,22 @@
+target_id: t4_lysozyme
+protein_name: T4 lysozyme
+family: lysozyme
+organism: Enterobacteria phage T4
+reference_pdb: 171L
+structure_path: inputs/t4l_171l/171L.pdb
+wt_fasta_path: datasets/benchmark_pool/t4_lysozyme/wt.fasta
+homologs_path: ""
+assay: lysozyme activity retention
+assay_readout: lytic activity or stability after freeze-thaw and oxidative challenge
+role: benchmark
+freeze_validation_tier: primary
+numbering_scheme: crystal chain numbering
+protected_positions: [11, 20, 26]
+catalytic_positions: [11, 20, 26]
+disulfide_pairs: []
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: [88, 126, 139, 158]
+notes:
+  - Structure-aligned chain A sequence from 171L.
+  - Design window emphasizes exposed oxidation-prone aromatic residues while keeping the catalytic groove protected.

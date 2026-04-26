@@ -1,0 +1,13 @@
+target,family,overall_source,overall_mutations,overall_score,overall_mars_score,best_learned_source,best_learned_mutations,best_learned_score,best_learned_mars_score,decoder_novel_count,decoder_rejected_count,accepted_homologs,accepted_asr,asr_prior_enabled,family_prior_enabled,family_dataset_id,overall_minus_best_learned,mars_minus_best_learned_mars,decoder_pressure
+1LBT,lipase_b,esm_if,R249Q;A251S;M298L,4.952495,3.007,esm_if,R249Q;A251S;M298L,4.952495,3.007,5,11,3,0,False,False,,0.0,0.0,6
+tem1_1btl,beta_lactamase,local_proposal,H153N;M155L;W229F;M272L,5.168758,10.457,mars_mpnn,H153Q;M155I;M272L,4.723608,7.828,0,2,2,0,False,False,,0.4451500000000008,2.6290000000000004,2
+petase_5xfy,cutinase,local_proposal,Y3F;Y40F;Y41F;Y117R,4.025727,1.208,mars_mpnn,Y3F;Y40F;Y41F,2.310004,1.218,0,5,4,0,False,False,,1.7157229999999997,-0.010000000000000009,5
+petase_5xh3,cutinase,local_proposal,Y3F;Y40F;Y41F;Y117F,4.021724,2.957,mars_mpnn,Y3F;Y40F;Y117F,3.499152,0.211,0,7,4,0,False,False,,0.5225719999999998,2.746,7
+sfgfp_2b3p,gfp_like,local_proposal,H25Q;H139Q;Y182F;H231Q,5.302406,6.227,mars_mpnn,Y182D;H231Q,-2.516869,-1.743,2,5,5,0,False,False,,7.819275,7.970000000000001,3
+t4l_171l,lysozyme,local_proposal,Y88F;W126F;Y139S;W158F,4.87395,3.293,mars_mpnn,Y88F;Y139F;W158F,3.45512,0.34,0,1,4,0,False,False,,1.4188299999999998,2.9530000000000003,1
+subtilisin_2st1,subtilisin,local_proposal,Y21F;Y104F;W241F;Y262F,3.945998,2.157,fusion_decoder,Y21F;Y104D;W241F;Y262L,-0.143209,1.165,4,3,4,0,False,False,,4.089207,0.992,-1
+adk_1s3g,adenylate_kinase,local_proposal,Y24F;H28Q;M103L;H109Q,4.944451,11.727,mars_mpnn,H28L;M103L,-8.905623,0.17,0,10,2,0,False,True,adk_psychro_pairs,13.850074,11.557,10
+esterase_7b4q,lipase_esterase,local_proposal,M52T;Y61F;H121S;Y123Q,5.217387,7.745,fusion_decoder,M52L;Y61D;H121S;Y123Q,4.561337,8.71,3,2,2,0,False,True,esterase_env_pairs,0.6560500000000005,-0.9650000000000007,-1
+sod_1y67,superoxide_dismutase,local_proposal,Y10F;H18Q;W175F;Y180F,5.082701,4.257,mars_mpnn,Y10F;H18Y,-6.479935,-2.425,0,8,3,0,False,True,sod_oxidative_pairs,11.562636000000001,6.6819999999999995,8
+CLD_3Q09_NOTOPIC,cld,local_proposal,W155F;W156F;M167L;M212L;W227F,4.227109,3.522,fusion_decoder,W155G;W156F;M167I;M212L;W227F,3.765477,2.439,3,1,13,4,True,False,,0.4616319999999994,1.0829999999999997,-2
+CLD_3Q09_TOPIC,cld,local_proposal,W155F;W156F;M167L;M212L;W227F,5.096971,4.999,mars_mpnn,W155F;W156Y;M167V;M212L;W227F,3.038502,1.399,2,14,13,4,True,False,,2.058469,3.5999999999999996,12

@@ -1,0 +1,22 @@
+target_id: sod_1y67
+protein_name: Mn-superoxide dismutase
+family: superoxide_dismutase
+organism: Deinococcus radiodurans
+reference_pdb: 1Y67
+structure_path: inputs/sod_1y67/1Y67.pdb
+wt_fasta_path: datasets/benchmark_pool/sod_1y67/wt.fasta
+homologs_path: datasets/evolution_train/sod_oxidative_pairs/positive.fasta
+assay: superoxide dismutation activity assay
+assay_readout: residual activity after oxidation or radiation-mimetic stress
+role: benchmark
+freeze_validation_tier: secondary
+protected_positions: []
+catalytic_positions: []
+disulfide_pairs: []
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: [10, 18, 175, 180]
+notes:
+  - Exploratory ROS-centered benchmark target backed by the sod_oxidative_pairs family prior.
+  - The current config focuses on surface oxidation-prone residues rather than rebuilding the metal center region.
+  - Protected and catalytic annotations should be tightened before any experimental prioritization.

@@ -1,0 +1,67 @@
+protein:
+  name: "CLD_3Q09_NOTOPIC"
+  pdb_path: "inputs/cld_3q09/3Q09.pdb"
+  chain: "A"
+  wt_sequence: "KIERGTILTQPGVFGVFTMFKLRPDWNKVPVAERKGAAEEVKKLIEKHKDNVLVDLYLTRGLETNSDFFFRINAYDLAKAQTFMREFRSTTVGKNADVFETLVGVTKPLNYISKDKSPGLNAGLSSATYSGPAPRYVIVIPVKKNAEWWNMSPEERLKEMEVHTTPTLAYLVNVKRKLYHSTGLDDTDFITYFETDDLTAFNNLMLSLAQVKENKFHVRWGSPTTLGTIHSPEDVIKALAD"
+  protected_positions: [118, 170, 177, 183, 199, 224]
+
+generation:
+  design_positions: [155, 156, 167, 212, 227]
+  num_seq_per_target: 2
+  sampling_temp: "0.1"
+  seed: 42
+  batch_size: 1
+  use_soluble_model: true
+  esm_if:
+    enabled: false
+
+method:
+  oxidation_min_sasa: 20.0
+  oxidation_min_dist_protected: 2.0
+  flexible_surface_min_sasa: 25.0
+  score_weights:
+    oxidation: 1.0
+    surface: 0.6
+    manual: 0.8
+    evolution: 1.0
+    burden: 1.0
+    topic_sequence: 0.0
+    topic_structure: 0.0
+    topic_evolution: 0.0
+  manual_bias:
+    155:
+      F: 1.6
+      Y: 0.6
+    156:
+      F: 1.6
+      Y: 0.6
+    167:
+      L: 1.8
+      I: 1.6
+      V: 0.8
+    212:
+      L: 1.8
+      I: 1.6
+      V: 0.8
+    227:
+      F: 1.8
+      Y: 0.8
+  local_proposals:
+    enabled: true
+    max_variants_per_position: 4
+    max_candidates: 96
+
+evolution:
+  homologs_fasta: "../designs/asr_cld_prb/cld_asr_input.fasta"
+  asr_fasta: "../designs/asr_cld_prb/run3/cld_ancestor_recommended_panel.fasta"
+  min_identity: 0.2
+  profile_prior_scale: 0.35
+  asr_prior_scale: 0.55
+  family_prior_scale: 0.0
+
+topic:
+  enabled: false
+  name: "cld"
+
+benchmark:
+  family: "cld"

@@ -1,0 +1,27 @@
+targets:
+  - "configs/calb_1lbt.yaml"
+  - "configs/tem1_1btl.yaml"
+  - "configs/petase_5xfy.yaml"
+  - "configs/petase_5xh3.yaml"
+  - "configs/sfgfp_2b3p.yaml"
+  - "configs/t4l_171l.yaml"
+  - "configs/subtilisin_2st1.yaml"
+  - "configs/adk_1s3g.yaml"
+  - "configs/esterase_7b4q.yaml"
+  - "configs/sod_1y67.yaml"
+  - "configs/cld_3q09_notopic.yaml"
+  - "configs/cld_3q09_topic.yaml"
+
+ablations:
+  full: {}
+  no_oxidation:
+    oxidation: 0.0
+  no_surface:
+    surface: 0.0
+  no_evolution:
+    evolution: 0.0
+
+neural_rerank:
+  enabled: true
+  epochs: 1
+  lr: 0.001

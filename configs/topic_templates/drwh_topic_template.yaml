@@ -1,0 +1,15 @@
+topic:
+  enabled: true
+  name: "drwh"
+  drwh:
+    buried_sasa_max: 20.0
+    surface_sasa_min: 35.0
+    target_hydrophobic_fraction_min: 0.28
+    target_hydrophobic_fraction_max: 0.48
+    target_polar_fraction_min: 0.16
+    target_polar_fraction_max: 0.35
+    target_net_charge_min: -8.0
+    target_net_charge_max: 2.0
+    profile_prior_scale: 0.30
+    asr_prior_scale: 0.70
+    family_prior_scale: 0.35

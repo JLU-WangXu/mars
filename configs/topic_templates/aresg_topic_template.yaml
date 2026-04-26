@@ -1,0 +1,16 @@
+topic:
+  enabled: true
+  name: "aresg"
+  aresg:
+    buried_sasa_max: 20.0
+    surface_sasa_min: 35.0
+    target_low_complexity_min: 0.40
+    target_low_complexity_max: 0.82
+    target_polar_fraction_min: 0.20
+    target_polar_fraction_max: 0.42
+    target_hydrophobic_fraction_min: 0.22
+    target_hydrophobic_fraction_max: 0.42
+    target_net_charge_abs_max: 10.0
+    profile_prior_scale: 0.25
+    asr_prior_scale: 0.45
+    family_prior_scale: 0.25

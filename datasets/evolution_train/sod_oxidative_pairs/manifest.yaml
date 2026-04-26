@@ -1,0 +1,24 @@
+dataset_id: sod_oxidative_pairs
+family: superoxide_dismutase
+adaptation_axis: oxidative_tolerance
+positive_definition: Mn-SOD homologs from oxidative or radiation-tolerant bacteria
+negative_definition: mesophilic bacterial Mn-SOD homologs
+label_unit: sequence
+source_strategy: curated UniProt seed set
+split_group: superoxide_dismutase
+positive_fasta: evolution_train/sod_oxidative_pairs/positive.fasta
+negative_fasta: evolution_train/sod_oxidative_pairs/negative.fasta
+aligned_a3m: ""
+labels_csv: ""
+representative_structure_path: inputs/sod_1y67/1Y67.pdb
+positive_accessions:
+  - Q9RUV2
+  - Q1J052
+  - Q1ARZ8
+negative_accessions:
+  - P00448
+  - P54375
+notes:
+  - Positive seeds are centered on radiation- or stress-tolerant Deinococcus and Rubrobacter homologs.
+  - Negative seeds are mesophilic bacterial Mn-SOD proteins from Escherichia coli and Bacillus subtilis.
+  - This family is a good first target for learning ROS-aware sequence priors.

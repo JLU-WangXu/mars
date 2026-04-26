@@ -1,0 +1,17 @@
+topic:
+  enabled: true
+  name: "microgravity"
+  microgravity:
+    surface_sasa_min: 38.0
+    buried_sasa_max: 20.0
+    high_flex_b_min: 32.0
+    target_polar_fraction_min: 0.18
+    target_polar_fraction_max: 0.42
+    target_net_charge_abs_min: 2.0
+    target_net_charge_abs_max: 14.0
+    surface_sticky_fraction_max: 0.33
+    surface_charge_fraction_min: 0.14
+    surface_charge_fraction_max: 0.42
+    profile_prior_scale: 0.25
+    asr_prior_scale: 0.35
+    family_prior_scale: 0.35

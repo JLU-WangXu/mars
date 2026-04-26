@@ -1,0 +1,7 @@
+dataset_id,family,adaptation_axis,record_type,status,positive_group,negative_group,manifest_path,notes
+esterase_env_pairs,lipase_esterase,cold_surface_adaptation,family_pair,seed,cold-active or environment-adapted hydrolase seeds,mesophilic hydrolase seeds,evolution_train/esterase_env_pairs/manifest.yaml,Useful exploratory seed set but still heterogeneous and not final finetune quality
+adk_psychro_pairs,adenylate_kinase,freeze_tolerance,family_pair,ready,psychrophilic adenylate kinases,mesophilic adenylate kinases,evolution_train/adk_psychro_pairs/manifest.yaml,Compact fold with clean positive and negative microbial seeds
+sod_oxidative_pairs,superoxide_dismutase,oxidative_tolerance,family_pair,ready,oxidative or radiation-tolerant Mn-SOD homologs,reference mesophilic bacterial Mn-SOD homologs,evolution_train/sod_oxidative_pairs/manifest.yaml,Good starting family for ROS-aware priors
+thioredoxin_redox_pairs,thioredoxin,oxidative_tolerance,family_pair,collect,stress-tolerant thioredoxins,mesophilic thioredoxins,evolution_train/thioredoxin_redox_pairs/manifest.yaml,Strong redox adaptation family
+mdh_thermo_pairs,malate_dehydrogenase,thermo_stability,family_pair,collect,thermophilic MDHs,mesophilic MDHs,evolution_train/mdh_thermo_pairs/manifest.yaml,Useful general stability counterweight
+gfp_freeze_mutants,gfp_like,freeze_tolerance,mutation_table,collect,freeze-tolerant fluorescent variants,reference GFP variants,evolution_train/gfp_freeze_mutants/manifest.yaml,Can capture non-enzymatic freeze resilience

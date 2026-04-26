@@ -1,0 +1,13 @@
+targets:
+  - "configs/adk_1s3g_nofamily.yaml"
+  - "configs/esterase_7b4q_nofamily.yaml"
+  - "configs/sod_1y67_nofamily.yaml"
+
+ablations:
+  full: {}
+  no_oxidation:
+    oxidation: 0.0
+  no_surface:
+    surface: 0.0
+  no_evolution:
+    evolution: 0.0

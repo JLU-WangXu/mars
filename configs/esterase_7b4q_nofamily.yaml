@@ -1,0 +1,55 @@
+protein:
+  name: "esterase_7b4q_nofamily"
+  pdb_path: "inputs/esterase_7b4q/7B4Q.pdb"
+  chain: "A"
+  wt_sequence: "MKNRIDPELRAMLDMFPPLNLDDVQATRKAMEEAAQLTELPVDEEVVVSNRMVPGPEDNPYVRVRIYEPKEKIEKLPGLLWIHGGGYVLGAPEGDDLLCQRFVKEANCVVVSVDYRLAPEHPYPAPLEDCYAALQWFAKKVDELGVDASRIGVGGQSAGGGLTAALALLARDRKGPELCFQMPLYPMIDDKNNSPSSLEITGNLIWNHDLNEKGWSMYLDGKNGTDDVPVHAAPARATDLTNLPYTYTCVGQLDPFRDETLDYVKRLCQAGVDVEFHLYPGAYHGFETLNPAAAVSQRALAEYVGAVKHVLNRE"
+  catalytic_positions: []
+  protected_positions: []
+
+generation:
+  design_positions: [52, 61, 121, 123]
+  num_seq_per_target: 20
+  sampling_temp: "0.1 0.2"
+  seed: 42
+  batch_size: 1
+  use_soluble_model: true
+  esm_if:
+    enabled: true
+    num_samples: 8
+    temperature: 1.0e-6
+    nogpu: true
+
+method:
+  oxidation_min_sasa: 25.0
+  oxidation_min_dist_protected: 8.0
+  flexible_surface_min_sasa: 40.0
+  score_weights:
+    oxidation: 1.0
+    surface: 1.0
+    manual: 1.0
+    evolution: 1.0
+    burden: 1.0
+  manual_bias:
+    52:
+      L: 2.5
+      I: 2.2
+      V: 1.4
+    61:
+      F: 1.2
+    121:
+      Q: 1.1
+      N: 0.8
+      E: 0.5
+    123:
+      F: 1.2
+
+evolution:
+  homologs_fasta: "datasets/evolution_train/esterase_env_pairs/positive.fasta"
+  aligned_fasta: ""
+  min_identity: 0.2
+  profile_prior_scale: 0.35
+  family_prior_scale: 0.0
+
+benchmark:
+  family: "lipase_esterase"
+  label: "esterase_7b4q"

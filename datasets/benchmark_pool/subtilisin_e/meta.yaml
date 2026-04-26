@@ -1,0 +1,22 @@
+target_id: subtilisin_e
+protein_name: subtilisin BPN'
+family: subtilisin
+organism: Bacillus amyloliquefaciens
+reference_pdb: 2ST1
+structure_path: inputs/subtilisin_2st1/2ST1.pdb
+wt_fasta_path: datasets/benchmark_pool/subtilisin_e/wt.fasta
+homologs_path: ""
+assay: protease activity retention
+assay_readout: peptide or casein hydrolysis after oxidative and dry-rehydration challenge
+role: benchmark
+freeze_validation_tier: secondary
+numbering_scheme: crystal chain numbering
+protected_positions: [32, 64, 221]
+catalytic_positions: [32, 64, 221]
+disulfide_pairs: []
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: [21, 104, 241, 262]
+notes:
+  - Structure-aligned mature chain A sequence from 2ST1.
+  - Design window focuses on exposed Tyr/Trp oxidation hotspots while protecting the catalytic triad.

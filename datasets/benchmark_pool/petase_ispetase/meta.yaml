@@ -1,0 +1,26 @@
+target_id: petase_ispetase
+protein_name: Poly(ethylene terephthalate) hydrolase
+family: cutinase
+organism: Piscinibacter sakaiensis
+reference_pdb: 5XFY
+structure_path: inputs/petase_5xfy/5XFY.pdb
+wt_fasta_path: datasets/benchmark_pool/petase_ispetase/wt.fasta
+homologs_path: ""
+assay: PET analog hydrolysis
+assay_readout: residual hydrolysis after freeze-thaw or lyophilization
+role: benchmark
+freeze_validation_tier: secondary
+numbering_scheme: structure-aligned mature chain
+protected_positions: [58, 103, 131, 156, 174, 177, 208, 210, 244, 260]
+catalytic_positions: [131, 177, 208]
+disulfide_pairs:
+  - [174, 210]
+  - [244, 260]
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: []
+notes:
+  - WT FASTA is the mature UniProt sequence aligned to structure numbering, with the secretion signal removed.
+  - UniProt active-site annotations map onto mature positions 131, 177, and 208.
+  - Structure 5XFY is a near-WT fold reference but carries an S131A catalytic mutation relative to the WT mature sequence.
+  - Structure 5XFY is suitable for initial fold-conditioned benchmarking, but catalytic-site interpretation should use the WT sequence.

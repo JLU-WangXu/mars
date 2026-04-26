@@ -1,0 +1,13 @@
+target,family,overall_source,overall_mutations,overall_score,overall_mars_score,best_learned_source,best_learned_mutations,best_learned_score,best_learned_mars_score,decoder_novel_count,decoder_rejected_count,accepted_homologs,accepted_asr,asr_prior_enabled,family_prior_enabled,family_dataset_id
+1LBT,lipase_b,local_proposal,M298L,4.715593,3.867,fusion_decoder,R249E;A251E;M298L,3.899051,3.207,5,10,3,0,False,False,NA
+tem1_1btl,beta_lactamase,local_proposal,H153N;M155L;W229F;M272L,5.200508,10.457,mars_mpnn,H153Q;M155I;M272L,4.937962,7.828,0,2,2,0,False,False,NA
+petase_5xfy,cutinase,mars_mpnn,Y3F;Y40F;Y41F;Y117F,4.671612,2.957,mars_mpnn,Y3F;Y40F;Y41F;Y117F,4.671612,2.957,0,5,4,0,False,False,NA
+petase_5xh3,cutinase,local_proposal,Y3F;Y40F;Y41F;Y117F,4.667548,2.957,mars_mpnn,Y3F;Y40F;Y117F,2.766787,0.211,0,7,4,0,False,False,NA
+sfgfp_2b3p,gfp_like,local_proposal,H25Q;H139Q;Y182F;H231Q,5.110328,6.227,fusion_decoder,H25Q;H139Q;Y182F;H231E,3.914713,4.727,2,5,5,0,False,False,NA
+t4l_171l,lysozyme,local_proposal,Y88F;W126F;Y139F;W158F,4.806762,2.957,mars_mpnn,Y88F;Y139F;W158F,3.084917,0.34,0,1,4,0,False,False,NA
+subtilisin_2st1,subtilisin,local_proposal,Y21F;Y104F;W241F;Y262F,4.662748,2.157,fusion_decoder,Y21F;Y104D;W241F;Y262F,2.656835,1.457,4,3,4,0,False,False,NA
+adk_1s3g,adenylate_kinase,local_proposal,Y24F;H28Q;M103L;H109Q,5.191054,11.727,mars_mpnn,H28L;M103L,-2.498556,0.17,0,8,2,0,False,True,adk_psychro_pairs
+esterase_7b4q,lipase_esterase,local_proposal,M52L;Y61F;H121Q;Y123Q,5.252716,8.603,fusion_decoder,M52L;Y61P;H121S;Y123Q,4.191,8.01,2,5,2,0,False,True,esterase_env_pairs
+sod_1y67,superoxide_dismutase,local_proposal,Y10F;H18Q;W175F;Y180F,5.008289,4.257,mars_mpnn,Y10F;H18Y,-7.831529,-2.425,0,8,3,0,False,True,sod_oxidative_pairs
+CLD_3Q09_NOTOPIC,cld,local_proposal,W155F;W156F;M167I;M212L;W227F,4.445985,3.719,fusion_decoder,W155G;W156F;M167I;M212L;W227F,3.58252,2.439,5,3,13,4,True,False,NA
+CLD_3Q09_TOPIC,cld,local_proposal,W155F;W156F;M167L;M212L;W227F,5.174131,4.999,mars_mpnn,W155F;W156Y;M167V;M212L;W227F,3.272643,1.399,2,14,13,4,True,False,NA

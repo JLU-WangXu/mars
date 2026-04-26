@@ -1,0 +1,24 @@
+target_id: tem1_bla
+protein_name: TEM-1 beta-lactamase
+family: beta_lactamase
+organism: Escherichia coli
+reference_pdb: 1BTL
+structure_path: inputs/tem1_1btl/1BTL.pdb
+wt_fasta_path: datasets/benchmark_pool/tem1_bla/wt.fasta
+homologs_path: ""
+assay: nitrocefin hydrolysis
+assay_readout: residual hydrolysis after freeze-thaw, oxidation, or lyophilization
+role: benchmark
+freeze_validation_tier: primary
+numbering_scheme: structure-aligned mature chain
+protected_positions: [45, 48, 52, 98, 105, 141, 209, 210, 211]
+catalytic_positions: [45, 48, 105, 141]
+disulfide_pairs:
+  - [52, 98]
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: []
+notes:
+  - Mature sequence uses the structure-aligned TEM-1 chain without the N-terminal signal peptide.
+  - UniProt active-site annotations map onto mature chain positions 45, 48, 105, and 141.
+  - The 1BTL crystal chain is near-WT but differs from the UniProt mature sequence at positions 59 and 159.

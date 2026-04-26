@@ -1,0 +1,78 @@
+{
+  "target_count": 6,
+  "rendered": true,
+  "targets": [
+    {
+      "target": "1LBT",
+      "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline",
+      "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\viz_bundle\\viz_manifest.json",
+      "render_scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\1LBT\\render_scene.pml",
+      "overview_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\1LBT\\overview.png",
+      "design_window_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\1LBT\\design_window.png",
+      "figure_session_pse": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\1LBT\\figure_session.pse",
+      "overall_mutations": "R249Q;A251S;M298L",
+      "best_learned_mutations": "R249Q;A251S;M298L",
+      "rendered": true
+    },
+    {
+      "target": "tem1_1btl",
+      "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline",
+      "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\viz_bundle\\viz_manifest.json",
+      "render_scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\tem1_1btl\\render_scene.pml",
+      "overview_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\tem1_1btl\\overview.png",
+      "design_window_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\tem1_1btl\\design_window.png",
+      "figure_session_pse": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\tem1_1btl\\figure_session.pse",
+      "overall_mutations": "H153N;M155L;W229F;M272L",
+      "best_learned_mutations": "H153Q;M155I;M272L",
+      "rendered": true
+    },
+    {
+      "target": "petase_5xh3",
+      "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline",
+      "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\viz_bundle\\viz_manifest.json",
+      "render_scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xh3\\render_scene.pml",
+      "overview_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xh3\\overview.png",
+      "design_window_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xh3\\design_window.png",
+      "figure_session_pse": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xh3\\figure_session.pse",
+      "overall_mutations": "Y3F;Y40F;Y41F;Y117F",
+      "best_learned_mutations": "Y3F;Y40F;Y117F",
+      "rendered": true
+    },
+    {
+      "target": "petase_5xfy",
+      "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline",
+      "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\viz_bundle\\viz_manifest.json",
+      "render_scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xfy\\render_scene.pml",
+      "overview_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xfy\\overview.png",
+      "design_window_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xfy\\design_window.png",
+      "figure_session_pse": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xfy\\figure_session.pse",
+      "overall_mutations": "Y3F;Y40F;Y117F",
+      "best_learned_mutations": "Y3F;Y40F;Y117F",
+      "rendered": true
+    },
+    {
+      "target": "CLD_3Q09_TOPIC",
+      "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline",
+      "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\viz_bundle\\viz_manifest.json",
+      "render_scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\CLD_3Q09_TOPIC\\render_scene.pml",
+      "overview_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\CLD_3Q09_TOPIC\\overview.png",
+      "design_window_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\CLD_3Q09_TOPIC\\design_window.png",
+      "figure_session_pse": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\CLD_3Q09_TOPIC\\figure_session.pse",
+      "overall_mutations": "W155F;W156F;M167L;M212L;W227F",
+      "best_learned_mutations": "W155F;W156Y;M167V;M212L;W227F",
+      "rendered": true
+    },
+    {
+      "target": "CLD_3Q09_NOTOPIC",
+      "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline",
+      "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\viz_bundle\\viz_manifest.json",
+      "render_scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\CLD_3Q09_NOTOPIC\\render_scene.pml",
+      "overview_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\CLD_3Q09_NOTOPIC\\overview.png",
+      "design_window_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\CLD_3Q09_NOTOPIC\\design_window.png",
+      "figure_session_pse": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\CLD_3Q09_NOTOPIC\\figure_session.pse",
+      "overall_mutations": "W155F;W156Y;M167V;M212L;W227F",
+      "best_learned_mutations": "W155F;W156Y;M167V;M212L;W227F",
+      "rendered": true
+    }
+  ]
+}

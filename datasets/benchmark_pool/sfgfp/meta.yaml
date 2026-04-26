@@ -1,0 +1,23 @@
+target_id: sfgfp
+protein_name: superfolder GFP crystal construct
+family: gfp_like
+organism: Aequorea victoria-derived engineered variant
+reference_pdb: 2B3P
+structure_path: inputs/sfgfp_2b3p/2B3P.pdb
+wt_fasta_path: datasets/benchmark_pool/sfgfp/wt.fasta
+homologs_path: ""
+assay: fluorescence retention
+assay_readout: fluorescence after freeze-thaw or lyophilization
+role: benchmark
+freeze_validation_tier: primary
+numbering_scheme: crystal construct numbering with chromophore normalization
+protected_positions: [65, 66, 67]
+catalytic_positions: []
+disulfide_pairs: []
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: []
+notes:
+  - WT FASTA comes from the 2B3P crystal chain and normalizes the chromophore placeholder residue to Y for sequence bookkeeping.
+  - The crystal contains the mature GFP chromophore residue CRO and a C-terminal His tag.
+  - This target is well suited for freeze-validation and fluorescence benchmarking, but it needs noncanonical-residue preprocessing before inverse-folding design.

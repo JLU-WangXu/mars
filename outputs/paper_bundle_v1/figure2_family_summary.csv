@@ -1,0 +1,11 @@
+family,target_count,mean_overall_score,mean_best_learned_score,family_prior_targets,asr_active_targets,decoder_injected_targets
+adenylate_kinase,1,5.191054,-2.498556,1,0,0
+beta_lactamase,1,5.200508,4.937962,0,0,0
+cld,2,4.810058,3.427582,0,2,2
+cutinase,2,4.66958,3.719199,0,0,0
+gfp_like,1,5.110328,3.914713,0,0,1
+lipase_b,1,4.715593,3.899051,0,0,1
+lipase_esterase,1,5.252716,4.191,1,0,1
+lysozyme,1,4.806762,3.084917,0,0,0
+subtilisin,1,4.662748,2.656835,0,0,1
+superoxide_dismutase,1,5.008289,-7.831529,1,0,0

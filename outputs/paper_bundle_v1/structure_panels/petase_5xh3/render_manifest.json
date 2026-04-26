@@ -1,0 +1,12 @@
+{
+  "target": "petase_5xh3",
+  "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline",
+  "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\viz_bundle\\viz_manifest.json",
+  "render_scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xh3\\render_scene.pml",
+  "overview_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xh3\\overview.png",
+  "design_window_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xh3\\design_window.png",
+  "figure_session_pse": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\petase_5xh3\\figure_session.pse",
+  "overall_mutations": "Y3F;Y40F;Y41F;Y117F",
+  "best_learned_mutations": "Y3F;Y40F;Y117F",
+  "rendered": true
+}

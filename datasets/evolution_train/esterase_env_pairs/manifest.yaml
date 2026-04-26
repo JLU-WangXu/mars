@@ -1,0 +1,23 @@
+dataset_id: esterase_env_pairs
+family: lipase_esterase
+adaptation_axis: cold_surface_adaptation
+positive_definition: cold-active or environment-adapted hydrolase seed sequences
+negative_definition: mesophilic hydrolase seed sequences
+label_unit: sequence
+source_strategy: mixed RCSB and UniProt exploratory seed set
+split_group: lipase_esterase
+positive_fasta: evolution_train/esterase_env_pairs/positive.fasta
+negative_fasta: evolution_train/esterase_env_pairs/negative.fasta
+aligned_a3m: ""
+labels_csv: ""
+representative_structure_path: inputs/esterase_7b4q/7B4Q.pdb
+positive_accessions:
+  - 7B4Q_chainA
+  - A0A0K8P6T7
+negative_accessions:
+  - 1I6W_chainA
+  - P00590
+notes:
+  - This is only a rough exploratory seed set and is not yet clean enough for formal finetuning.
+  - The current positive side mixes a cold-active hydrolase structure seed with PETase as an environment-adapted hydrolase reference.
+  - Before any serious training, this family should be rebuilt with tighter same-family homology control.

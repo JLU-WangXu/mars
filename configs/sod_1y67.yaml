@@ -1,0 +1,57 @@
+protein:
+  name: "sod_1y67"
+  pdb_path: "inputs/sod_1y67/1Y67.pdb"
+  chain: "A"
+  wt_sequence: "AAYTLPQLPYAYDALEPHIDARTMEIHHTKHHQTYVDNANKALEGTEFADLPVEQLIQQLDRVPADKKGALRNNAGGHANHSMFWQIMGQGQGANQPSGELLDAINSAFGSFDAFKQKFEDAAKTRFGSGWAWLVVKDGKLDVVSTANQDNPLMGEAIAGVSGTPILGVDVWEHAYYLNYQNRRPDYLAAFWNVVNWDEVSKRYAAAKLV"
+  catalytic_positions: []
+  protected_positions: []
+
+generation:
+  design_positions: [10, 18, 175, 180]
+  num_seq_per_target: 20
+  sampling_temp: "0.1 0.2"
+  seed: 42
+  batch_size: 1
+  use_soluble_model: true
+  esm_if:
+    enabled: true
+    num_samples: 8
+    temperature: 1.0e-6
+    nogpu: true
+
+method:
+  oxidation_min_sasa: 25.0
+  oxidation_min_dist_protected: 8.0
+  flexible_surface_min_sasa: 40.0
+  score_weights:
+    oxidation: 1.0
+    surface: 1.0
+    manual: 1.0
+    evolution: 1.0
+    burden: 1.0
+  manual_bias:
+    10:
+      F: 1.2
+    18:
+      Q: 1.1
+      N: 0.8
+      E: 0.5
+    175:
+      F: 1.6
+      Y: 0.8
+    180:
+      F: 1.2
+
+evolution:
+  homologs_fasta: "datasets/evolution_train/sod_oxidative_pairs/positive.fasta"
+  family_manifest: "datasets/evolution_train/sod_oxidative_pairs/manifest.yaml"
+  aligned_fasta: ""
+  min_identity: 0.2
+  family_min_identity: 0.2
+  family_top_k: 3
+  family_min_delta: 0.05
+  profile_prior_scale: 0.35
+  family_prior_scale: 0.60
+
+benchmark:
+  family: "superoxide_dismutase"

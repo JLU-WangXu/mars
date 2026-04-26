@@ -1,0 +1,13 @@
+pandas>=2.0
+PyYAML>=6.0
+numpy>=1.26
+matplotlib>=3.8
+python-docx>=1.1
+gemmi>=0.6
+
+# Optional / external runtime pieces used by selected branches:
+# - torch
+# - esm
+# - ProteinMPNN dependencies
+# - iqtree2
+# - mafft

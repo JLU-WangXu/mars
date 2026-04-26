@@ -1,0 +1,186 @@
+[
+  {
+    "figure_label": "Figure 1",
+    "title": "MARS-FIELD architecture",
+    "source_doc": "F:\\4-15Marsprotein\\mars_stack\\docs\\mars_field_figure1_spec_v2.md",
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure1_mars_field_architecture_v1.svg",
+    "caption": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure1_mars_field_architecture_v1_caption.md",
+    "figure_type": "principle_diagram"
+  },
+  {
+    "figure_label": "Figure 2",
+    "title": "Twelvepack benchmark overview",
+    "source_table": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figure2_benchmark_overview.csv",
+    "family_table": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figure2_family_summary.csv",
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure2_benchmark_overview_v3.svg",
+    "figure_type": "benchmark_overview"
+  },
+  {
+    "figure_label": "Figure 3",
+    "title": "Decoder and calibration analysis",
+    "source_table": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figure3_decoder_summary.csv",
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure3_decoder_calibration_v3.svg",
+    "figure_type": "calibration_analysis"
+  },
+  {
+    "figure_label": "Figure 3S",
+    "title": "Neural comparison analysis",
+    "source_table": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\neural_comparison_summary.csv",
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure_neural_comparison_v1.svg",
+    "figure_type": "neural_comparison"
+  },
+  {
+    "figure_label": "Figure 3T",
+    "title": "Neural branch diagnostics",
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure_neural_branch_diagnostics_v1.svg",
+    "figure_type": "neural_branch_diagnostics"
+  },
+  {
+    "figure_label": "Figure 3U",
+    "title": "Neural policy comparison",
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure_policy_compare_v1.svg",
+    "figure_type": "neural_policy_comparison"
+  },
+  {
+    "figure_label": "Figure 4",
+    "title": "1LBT",
+    "figure_type": "case_study",
+    "primary_target": "1LBT",
+    "companion_targets": [],
+    "narrative_role": "Compact benchmark case for field construction, decoder behavior, and final winner calibration.",
+    "asset_paths": [
+      {
+        "target": "1LBT",
+        "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline",
+        "pipeline_summary": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\pipeline_summary.md",
+        "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\viz_bundle\\viz_manifest.json",
+        "scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\viz_bundle\\scene.pml",
+        "palette_json": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\viz_bundle\\palette.json",
+        "position_fields": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\position_fields.json",
+        "pairwise_tensor": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\pairwise_energy_tensor.json",
+        "retrieval_hits": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\retrieval_memory_hits.json",
+        "ancestral_field": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\ancestral_field.json",
+        "combined_candidates": "F:\\4-15Marsprotein\\mars_stack\\outputs\\1lbt_pipeline\\combined_ranked_candidates.csv"
+      }
+    ],
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure4_case_1lbt_v2.svg",
+    "primary_overall_mutations": "M298L",
+    "primary_overall_source": "local_proposal",
+    "primary_overall_score": 4.715593,
+    "companion_count": 0
+  },
+  {
+    "figure_label": "Figure 5",
+    "title": "tem1_1btl",
+    "figure_type": "case_study",
+    "primary_target": "tem1_1btl",
+    "companion_targets": [],
+    "narrative_role": "Robust multi-site engineering case that highlights selector stability and engineering consistency.",
+    "asset_paths": [
+      {
+        "target": "tem1_1btl",
+        "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline",
+        "pipeline_summary": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\pipeline_summary.md",
+        "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\viz_bundle\\viz_manifest.json",
+        "scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\viz_bundle\\scene.pml",
+        "palette_json": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\viz_bundle\\palette.json",
+        "position_fields": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\position_fields.json",
+        "pairwise_tensor": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\pairwise_energy_tensor.json",
+        "retrieval_hits": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\retrieval_memory_hits.json",
+        "ancestral_field": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\ancestral_field.json",
+        "combined_candidates": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\combined_ranked_candidates.csv"
+      }
+    ],
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure5_case_tem1_v2.svg",
+    "primary_overall_mutations": "H153N;M155L;W229F;M272L",
+    "primary_overall_source": "local_proposal",
+    "primary_overall_score": 5.200508,
+    "companion_count": 0
+  },
+  {
+    "figure_label": "Figure 6",
+    "title": "petase_5xh3",
+    "figure_type": "case_study",
+    "primary_target": "petase_5xh3",
+    "companion_targets": [
+      "petase_5xfy"
+    ],
+    "narrative_role": "Family-transfer case across related cutinase/PETase structures with aligned mutation logic.",
+    "asset_paths": [
+      {
+        "target": "petase_5xh3",
+        "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline",
+        "pipeline_summary": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\pipeline_summary.md",
+        "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\viz_bundle\\viz_manifest.json",
+        "scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\viz_bundle\\scene.pml",
+        "palette_json": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\viz_bundle\\palette.json",
+        "position_fields": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\position_fields.json",
+        "pairwise_tensor": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\pairwise_energy_tensor.json",
+        "retrieval_hits": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\retrieval_memory_hits.json",
+        "ancestral_field": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\ancestral_field.json",
+        "combined_candidates": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xh3_pipeline\\combined_ranked_candidates.csv"
+      },
+      {
+        "target": "petase_5xfy",
+        "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline",
+        "pipeline_summary": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\pipeline_summary.md",
+        "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\viz_bundle\\viz_manifest.json",
+        "scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\viz_bundle\\scene.pml",
+        "palette_json": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\viz_bundle\\palette.json",
+        "position_fields": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\position_fields.json",
+        "pairwise_tensor": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\pairwise_energy_tensor.json",
+        "retrieval_hits": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\retrieval_memory_hits.json",
+        "ancestral_field": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\ancestral_field.json",
+        "combined_candidates": "F:\\4-15Marsprotein\\mars_stack\\outputs\\petase_5xfy_pipeline\\combined_ranked_candidates.csv"
+      }
+    ],
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure6_case_petase_v2.svg",
+    "primary_overall_mutations": "Y3F;Y40F;Y41F;Y117F",
+    "primary_overall_source": "local_proposal",
+    "primary_overall_score": 4.667548,
+    "companion_count": 1
+  },
+  {
+    "figure_label": "Figure 7",
+    "title": "CLD_3Q09_TOPIC",
+    "figure_type": "case_study",
+    "primary_target": "CLD_3Q09_TOPIC",
+    "companion_targets": [
+      "CLD_3Q09_NOTOPIC"
+    ],
+    "narrative_role": "Ancestry-aware case study linking oxidative shell redesign to lineage-conditioned evidence.",
+    "asset_paths": [
+      {
+        "target": "CLD_3Q09_TOPIC",
+        "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline",
+        "pipeline_summary": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\pipeline_summary.md",
+        "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\viz_bundle\\viz_manifest.json",
+        "scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\viz_bundle\\scene.pml",
+        "palette_json": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\viz_bundle\\palette.json",
+        "position_fields": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\position_fields.json",
+        "pairwise_tensor": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\pairwise_energy_tensor.json",
+        "retrieval_hits": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\retrieval_memory_hits.json",
+        "ancestral_field": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\ancestral_field.json",
+        "combined_candidates": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_topic_pipeline\\combined_ranked_candidates.csv"
+      },
+      {
+        "target": "CLD_3Q09_NOTOPIC",
+        "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline",
+        "pipeline_summary": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\pipeline_summary.md",
+        "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\viz_bundle\\viz_manifest.json",
+        "scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\viz_bundle\\scene.pml",
+        "palette_json": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\viz_bundle\\palette.json",
+        "position_fields": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\position_fields.json",
+        "pairwise_tensor": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\pairwise_energy_tensor.json",
+        "retrieval_hits": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\retrieval_memory_hits.json",
+        "ancestral_field": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\ancestral_field.json",
+        "combined_candidates": "F:\\4-15Marsprotein\\mars_stack\\outputs\\cld_3q09_notopic_pipeline\\combined_ranked_candidates.csv"
+      }
+    ],
+    "rendered_figure": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\figures\\figure7_case_cld_v1.svg",
+    "primary_overall_mutations": "W155F;W156F;M167L;M212L;W227F",
+    "primary_overall_source": "local_proposal",
+    "primary_overall_score": 5.174131,
+    "companion_count": 1
+  }
+]

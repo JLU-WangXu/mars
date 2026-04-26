@@ -1,0 +1,56 @@
+protein:
+  name: "1LBT"
+  pdb_path: "inputs/calb_1lbt/1LBT.pdb"
+  chain: "A"
+  wt_sequence: "LPSGSDPAFSQPKSVLDAGLTCQGASPSSVSKPILLVPGTGTTGPQSFDSNWIPLSTQLGYTPCWISPPPFMLNDTQVNTEYMVNAITALYAGSGNNKLPVLTWSQGGLVAQWGLTFFPSIRSKVDRLMAFAPDYKGTVLAGPLDALAVSAPSVWQQTTGSALTTALRNAGGLTQIVPTTNLYSATDEIVQPQVSNSPLDSSYLFNGKNVQAQAVCGPLFVIDHAGSLTSQFSYVVGRSALRSTTGQARSADYGITDCNPLPANDLTPEQKVAAAALLAPAAAAIVAGPKQNCEPDLMPYARPFAVGKRTCSGIVTP"
+  catalytic_positions: [105, 187, 224]
+  protected_positions: [22, 64, 74, 105, 187, 216, 224, 258, 293, 311]
+
+generation:
+  design_positions: [249, 251, 298]
+  num_seq_per_target: 24
+  sampling_temp: "0.1 0.2"
+  seed: 42
+  batch_size: 1
+  use_soluble_model: true
+  esm_if:
+    enabled: true
+    num_samples: 8
+    temperature: 1.0e-6
+    nogpu: true
+
+method:
+  oxidation_min_sasa: 25.0
+  oxidation_min_dist_protected: 8.0
+  flexible_surface_min_sasa: 40.0
+  score_weights:
+    oxidation: 1.0
+    surface: 1.0
+    manual: 1.0
+    evolution: 1.0
+    burden: 1.0
+  manual_bias:
+    249:
+      L: 0.6
+      Q: 0.6
+      N: 0.4
+      V: 0.4
+    251:
+      E: 1.2
+      D: 1.0
+      Q: 0.6
+      N: 0.5
+      S: 0.4
+      T: 0.4
+    298:
+      L: 2.5
+      I: 2.2
+      V: 1.4
+
+evolution:
+  homologs_fasta: "datasets/benchmark_pool/calb_1lbt/homologs.fasta"
+  aligned_fasta: ""
+  min_identity: 0.2
+
+benchmark:
+  family: "lipase_b"

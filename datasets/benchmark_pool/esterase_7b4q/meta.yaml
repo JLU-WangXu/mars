@@ -1,0 +1,22 @@
+target_id: esterase_7b4q
+protein_name: Cold-active esterase
+family: lipase_esterase
+organism: exploratory seed
+reference_pdb: 7B4Q
+structure_path: inputs/esterase_7b4q/7B4Q.pdb
+wt_fasta_path: datasets/benchmark_pool/esterase_7b4q/wt.fasta
+homologs_path: datasets/evolution_train/esterase_env_pairs/positive.fasta
+assay: pNP ester hydrolysis
+assay_readout: residual activity after freeze-thaw or cold-surface adaptation panel
+role: benchmark
+freeze_validation_tier: secondary
+protected_positions: []
+catalytic_positions: []
+disulfide_pairs: []
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: [52, 61, 121, 123]
+notes:
+  - Exploratory hydrolase target added for the larger family-aware benchmark.
+  - Evolution prior is backed by esterase_env_pairs and should still be treated as a rough seed family.
+  - This target is suitable for method expansion but not yet a polished wet-lab lead.

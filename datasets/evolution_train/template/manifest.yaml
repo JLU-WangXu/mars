@@ -1,0 +1,15 @@
+dataset_id: example_family_set
+family: example_family
+adaptation_axis: freeze_tolerance
+positive_definition: adapted homologs
+negative_definition: reference homologs
+label_unit: sequence
+source_strategy: curated homolog collection
+split_group: example_family
+positive_fasta: evolution_train/example_family_set/positive.fasta
+negative_fasta: evolution_train/example_family_set/negative.fasta
+aligned_a3m: evolution_train/example_family_set/aligned.a3m
+labels_csv: evolution_train/example_family_set/labels.csv
+notes:
+  - Keep collection rules consistent within a family.
+  - Prefer same-family positive/negative comparisons over unrelated cross-family mixes.

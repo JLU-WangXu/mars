@@ -1,0 +1,60 @@
+protein:
+  name: "sfgfp_2b3p"
+  pdb_path: "inputs/sfgfp_2b3p/2B3P.pdb"
+  chain: "A"
+  wt_sequence: "SKGEELFTGVVPILVELDGDVNGHKFSVRGEGEGDATNGKLTLKFICTTGKLPVPWPTLVTTLYVQCFSRYPDHMKRHDFFKSAMPEGYVQERTISFKDDGTYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNFNSHNVYITADKQKNGIKANFKIRHNVEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSVLSKDPNEKRDHMVLLEFVTAAGITHG"
+  catalytic_positions: []
+  protected_positions: [65, 66, 67]
+  preprocess:
+    residue_renames:
+      - chain: "A"
+        residue_number: 66
+        from_name: "CRO"
+        to_name: "TYR"
+
+generation:
+  design_positions: [25, 139, 182, 231]
+  num_seq_per_target: 20
+  sampling_temp: "0.1 0.2"
+  seed: 42
+  batch_size: 1
+  use_soluble_model: true
+  esm_if:
+    enabled: true
+    num_samples: 8
+    temperature: 1.0e-6
+    nogpu: true
+
+method:
+  oxidation_min_sasa: 25.0
+  oxidation_min_dist_protected: 8.0
+  flexible_surface_min_sasa: 40.0
+  score_weights:
+    oxidation: 1.0
+    surface: 1.0
+    manual: 1.0
+    evolution: 1.0
+    burden: 1.0
+  manual_bias:
+    25:
+      Q: 1.1
+      N: 0.8
+      E: 0.5
+    139:
+      Q: 1.1
+      N: 0.8
+      E: 0.5
+    182:
+      F: 1.2
+    231:
+      Q: 1.1
+      N: 0.8
+      E: 0.5
+
+evolution:
+  homologs_fasta: "datasets/benchmark_pool/sfgfp/homologs.fasta"
+  aligned_fasta: ""
+  min_identity: 0.2
+
+benchmark:
+  family: "gfp_like"

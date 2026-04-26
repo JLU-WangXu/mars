@@ -1,0 +1,22 @@
+target_id: adk_1s3g
+protein_name: Adenylate kinase
+family: adenylate_kinase
+organism: Sporosarcina globispora
+reference_pdb: 1S3G
+structure_path: inputs/adk_1s3g/1S3G.pdb
+wt_fasta_path: datasets/benchmark_pool/adk_1s3g/wt.fasta
+homologs_path: datasets/evolution_train/adk_psychro_pairs/positive.fasta
+assay: adenylate kinase coupled turnover assay
+assay_readout: residual activity after freeze-thaw or cold-stress challenge
+role: benchmark
+freeze_validation_tier: secondary
+protected_positions: []
+catalytic_positions: []
+disulfide_pairs: []
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: [24, 28, 103, 109]
+notes:
+  - Exploratory ninepack target seeded from a cold-adapted adenylate kinase structure.
+  - Evolution prior is backed by the adk_psychro_pairs positive/negative family set.
+  - Current protected positions are intentionally minimal for method exploration and should be refined before wet-lab prioritization.

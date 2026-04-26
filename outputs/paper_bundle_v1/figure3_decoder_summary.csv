@@ -1,0 +1,13 @@
+target,decoder_enabled,decoder_injected,decoder_novel_count,decoder_rejected_count,best_decoder_candidate,best_decoder_ranking_score,overall_source,overall_mutations,overall_score,overall_mars_score,best_learned_source,best_learned_score
+1LBT,True,True,5,10,R249E;A251E;M298L,3.899051,local_proposal,M298L,4.715593,3.867,fusion_decoder,3.899051
+tem1_1btl,True,False,0,2,NA,0.0,local_proposal,H153N;M155L;W229F;M272L,5.200508,10.457,mars_mpnn,4.937962
+petase_5xfy,True,False,0,5,NA,0.0,mars_mpnn,Y3F;Y40F;Y41F;Y117F,4.671612,2.957,mars_mpnn,4.671612
+petase_5xh3,True,False,0,7,NA,0.0,local_proposal,Y3F;Y40F;Y41F;Y117F,4.667548,2.957,mars_mpnn,2.766787
+sfgfp_2b3p,True,True,2,5,H25Q;H139Q;Y182F;H231E,3.914713,local_proposal,H25Q;H139Q;Y182F;H231Q,5.110328,6.227,fusion_decoder,3.914713
+t4l_171l,True,False,0,1,NA,0.0,local_proposal,Y88F;W126F;Y139F;W158F,4.806762,2.957,mars_mpnn,3.084917
+subtilisin_2st1,True,True,4,3,Y21F;Y104D;W241F;Y262F,2.656835,local_proposal,Y21F;Y104F;W241F;Y262F,4.662748,2.157,fusion_decoder,2.656835
+adk_1s3g,True,False,0,8,NA,0.0,local_proposal,Y24F;H28Q;M103L;H109Q,5.191054,11.727,mars_mpnn,-2.498556
+esterase_7b4q,True,True,2,5,M52L;Y61P;H121S;Y123Q,4.191,local_proposal,M52L;Y61F;H121Q;Y123Q,5.252716,8.603,fusion_decoder,4.191
+sod_1y67,True,False,0,8,NA,0.0,local_proposal,Y10F;H18Q;W175F;Y180F,5.008289,4.257,mars_mpnn,-7.831529
+CLD_3Q09_NOTOPIC,True,True,5,3,W155G;W156F;M167I;M212L;W227F,3.58252,local_proposal,W155F;W156F;M167I;M212L;W227F,4.445985,3.719,fusion_decoder,3.58252
+CLD_3Q09_TOPIC,True,True,2,14,W155F;W156F;M167I;M212L,3.203647,local_proposal,W155F;W156F;M167L;M212L;W227F,5.174131,4.999,mars_mpnn,3.272643

@@ -1,0 +1,25 @@
+target_id: calb_1lbt
+protein_name: Candida antarctica lipase B
+family: lipase_b
+organism: Candida antarctica
+reference_pdb: 1LBT
+structure_path: inputs/calb_1lbt/1LBT.pdb
+wt_fasta_path: datasets/benchmark_pool/calb_1lbt/wt.fasta
+homologs_path: ""
+assay: pNP ester hydrolysis
+assay_readout: residual activity after freeze-thaw, oxidation, or lyophilization
+role: seed
+freeze_validation_tier: primary
+protected_positions: [22, 64, 74, 105, 187, 216, 224, 258, 293, 311]
+catalytic_positions: [105, 187, 224]
+disulfide_pairs:
+  - [22, 64]
+  - [216, 258]
+  - [293, 311]
+metal_binding_positions: []
+glyco_positions: []
+design_seed_positions: [249, 251, 298]
+notes:
+  - Current MarsStack proof-of-concept target.
+  - Structural feature scan flags M298 as the designable exposed Met hotspot of primary interest.
+  - Suggested first wet-lab panel includes WT, M298L, M298I, and A251E/M298L.

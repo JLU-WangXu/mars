@@ -1,0 +1,5 @@
+figure_label,case_id,primary_target,companion_targets,family,narrative_role,overall_source,overall_mutations,overall_score,overall_mars_score,best_learned_source,best_learned_mutations,best_learned_score
+Figure 4,case_1lbt,1LBT,NA,lipase_b,"Compact benchmark case for field construction, decoder behavior, and final winner calibration.",local_proposal,M298L,4.715593,3.867,fusion_decoder,R249E;A251E;M298L,3.899051
+Figure 5,case_tem1,tem1_1btl,NA,beta_lactamase,Robust multi-site engineering case that highlights selector stability and engineering consistency.,local_proposal,H153N;M155L;W229F;M272L,5.200508,10.457,mars_mpnn,H153Q;M155I;M272L,4.937962
+Figure 6,case_petase,petase_5xh3,petase_5xfy,cutinase,Family-transfer case across related cutinase/PETase structures with aligned mutation logic.,local_proposal,Y3F;Y40F;Y41F;Y117F,4.667548,2.957,mars_mpnn,Y3F;Y40F;Y117F,2.766787
+Figure 7,case_cld,CLD_3Q09_TOPIC,CLD_3Q09_NOTOPIC,cld,Ancestry-aware case study linking oxidative shell redesign to lineage-conditioned evidence.,local_proposal,W155F;W156F;M167L;M212L;W227F,5.174131,4.999,mars_mpnn,W155F;W156Y;M167V;M212L;W227F,3.272643

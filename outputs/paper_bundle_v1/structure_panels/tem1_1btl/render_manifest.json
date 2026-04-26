@@ -1,0 +1,12 @@
+{
+  "target": "tem1_1btl",
+  "pipeline_dir": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline",
+  "viz_manifest": "F:\\4-15Marsprotein\\mars_stack\\outputs\\tem1_1btl_pipeline\\viz_bundle\\viz_manifest.json",
+  "render_scene_pml": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\tem1_1btl\\render_scene.pml",
+  "overview_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\tem1_1btl\\overview.png",
+  "design_window_png": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\tem1_1btl\\design_window.png",
+  "figure_session_pse": "F:\\4-15Marsprotein\\mars_stack\\outputs\\paper_bundle_v1\\structure_panels\\tem1_1btl\\figure_session.pse",
+  "overall_mutations": "H153N;M155L;W229F;M272L",
+  "best_learned_mutations": "H153Q;M155I;M272L",
+  "rendered": true
+}

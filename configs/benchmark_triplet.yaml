@@ -1,0 +1,13 @@
+targets:
+  - "configs/calb_1lbt.yaml"
+  - "configs/tem1_1btl.yaml"
+  - "configs/petase_5xfy.yaml"
+
+ablations:
+  full: {}
+  no_oxidation:
+    oxidation: 0.0
+  no_surface:
+    surface: 0.0
+  no_evolution:
+    evolution: 0.0

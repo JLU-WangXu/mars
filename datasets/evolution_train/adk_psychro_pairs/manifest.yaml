@@ -1,0 +1,24 @@
+dataset_id: adk_psychro_pairs
+family: adenylate_kinase
+adaptation_axis: freeze_tolerance
+positive_definition: psychrophilic or cold-adapted microbial adenylate kinases
+negative_definition: mesophilic bacterial adenylate kinases
+label_unit: sequence
+source_strategy: curated UniProt seed set
+split_group: adenylate_kinase
+positive_fasta: evolution_train/adk_psychro_pairs/positive.fasta
+negative_fasta: evolution_train/adk_psychro_pairs/negative.fasta
+aligned_a3m: ""
+labels_csv: ""
+representative_structure_path: inputs/adk_1s3g/1S3G.pdb
+positive_accessions:
+  - P84139
+  - Q47XA8
+  - Q12ZS7
+negative_accessions:
+  - P69441
+  - P16304
+notes:
+  - Positive seeds emphasize psychrophilic or cold-adapted microbes.
+  - The representative structure 1S3G comes from the cold-adapted Sporosarcina globispora enzyme.
+  - This is an intentionally small but clean seed family for the first evolutionary prior experiments.
