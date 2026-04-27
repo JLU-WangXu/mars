@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 from .structure_features import ResidueFeature
+from . import conservation_analysis as ca
 
 
 def load_fasta(path: Path | None) -> list[tuple[str, str]]:
@@ -363,3 +364,107 @@ def build_structure_position_weights(
         weights[pos] = round(weight, 3)
 
     return weights
+
+
+def conservation_enhanced_weights(
+    profile: list[dict[str, float]] | None,
+    wt_seq: str,
+    positions: list[int],
+    position_to_index: dict[int, int] | None = None,
+    structure_weights: dict[int, float] | None = None,
+    weights_cfg: dict[str, float] | None = None,
+) -> dict[int, float]:
+    """Calculate conservation-enhanced position weights for thermostability.
+
+    Integrates evolutionary conservation scores with structural features to produce
+    enhanced position weights that reflect both evolutionary constraint and
+    structural importance.
+
+    Args:
+        profile: Alignment profile from homologs
+        wt_seq: Wild-type sequence
+        positions: Positions to analyze
+        position_to_index: Optional mapping from residue numbers to indices
+        structure_weights: Optional pre-computed structure weights
+        weights_cfg: Optional configuration for score weighting
+
+    Returns:
+        Dictionary mapping position to enhanced weight
+    """
+    if profile is None:
+        return structure_weights or {}
+
+    # Calculate evolutionary constraint scores
+    constraint_scores = ca.evolutionary_constraint_score(
+        profile, wt_seq, positions, position_to_index
+    )
+
+    # Calculate normalized conservation scores
+    conservation = ca.normalized_conservation(profile)
+    conservation_scores = {}
+    for i, score in enumerate(conservation):
+        idx = i
+        if position_to_index:
+            for pos, idx_map in position_to_index.items():
+                if idx_map == i:
+                    idx = pos
+                    break
+        conservation_scores[idx] = score
+
+    # Combine with structure weights if provided
+    if structure_weights:
+        combined = ca.integrate_thermostability_scores(
+            conservation_scores,
+            constraint_scores,
+            structure_weights,
+            weights_cfg,
+        )
+        return combined
+
+    # Just use evolutionary scores
+    enhanced = {}
+    for pos in positions:
+        cons = conservation_scores.get(pos, 0.5)
+        constr = constraint_scores.get(pos, 0.5)
+        # Simple weighted average
+        weight = 0.4 * cons + 0.6 * constr
+        enhanced[pos] = round(min(3.0, max(0.2, weight * 3.0)), 3)
+    return enhanced
+
+
+def conservation_analysis_summary(
+    profile: list[dict[str, float]] | None,
+    wt_seq: str,
+    positions: list[int],
+    position_to_index: dict[int, int] | None = None,
+) -> dict[str, Any]:
+    """Generate comprehensive conservation analysis summary.
+
+    Args:
+        profile: Alignment profile from homologs
+        wt_seq: Wild-type sequence
+        positions: Positions to analyze
+        position_to_index: Optional mapping from residue numbers to indices
+
+    Returns:
+        Dictionary with conservation analysis summary statistics
+    """
+    if profile is None:
+        return {"error": "No profile provided"}
+
+    entropies = ca.shannon_entropy(profile)
+    conservation = ca.normalized_conservation(profile)
+    constraint_scores = ca.evolutionary_constraint_score(profile, wt_seq, positions, position_to_index)
+    sites = ca.identify_functional_sites(profile, wt_seq, positions=positions)
+
+    return {
+        "num_positions": len(profile),
+        "num_positions_analyzed": len(positions),
+        "mean_entropy": round(sum(entropies) / len(entropies), 4) if entropies else 0.0,
+        "mean_conservation": round(sum(conservation) / len(conservation), 4) if conservation else 0.0,
+        "mean_constraint": round(sum(constraint_scores.values()) / len(constraint_scores), 4) if constraint_scores else 0.0,
+        "conserved_sites": len([s for s in sites if s["site_type"] == "conserved"]),
+        "variable_sites": len([s for s in sites if s["site_type"] == "variable"]),
+        "moderately_conserved": len([s for s in sites if s["site_type"] == "moderately_conserved"]),
+        "high_constraint_positions": [pos for pos, score in constraint_scores.items() if score > 0.7],
+    }
