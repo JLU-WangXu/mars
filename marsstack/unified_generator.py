@@ -34,15 +34,24 @@ def build_position_fields_from_proposals(
     top_k_per_position: int = 4,
     max_rows_per_source: int = 16,
 ) -> list[PositionField]:
-    per_position: dict[int, dict[str, dict[str, object]]] = {
-        int(pos): {
-            wt_seq[position_to_index[int(pos)]]: {
+    # Pre-compute rank discounts to avoid repeated sqrt calculations
+    _rank_discount_cache: dict[int, float] = {i: 1.0 / math.sqrt(i) for i in range(1, max_rows_per_source + 1)}
+    # Cache tanh(x/4.0) with clamped input for common score ranges [-20, 20]
+    _tanh_cache: dict[float, float] = {x: math.tanh(x / 4.0) for x in range(-20, 21)}
+
+    # Pre-allocate position data structure with cached index lookups
+    per_position: dict[int, dict[str, dict[str, object]]] = {}
+    position_to_index_get = position_to_index.get
+    for pos in design_positions:
+        pos_int = int(pos)
+        idx = position_to_index_get(pos_int, position_to_index_get(int(pos), 0))
+        wt_aa = wt_seq[idx]
+        per_position[pos_int] = {
+            wt_aa: {
                 "score": 0.0,
                 "supporting_sources": set(),
             }
         }
-        for pos in design_positions
-    }
 
     source_buckets: dict[str, list[ProposalRecord]] = {}
     for row in proposal_rows:
@@ -63,33 +72,41 @@ def build_position_fields_from_proposals(
         )[: int(max_rows_per_source)]
         for rank_idx, record in enumerate(bucket_rows, start=1):
             proposal_weight = source_weight(record.source_group, record.source)
-            rank_discount = 1.0 / math.sqrt(rank_idx)
-            score_signal = 0.55 * math.tanh(max(0.0, record.ranking_score) / 4.0) + 0.35 * math.tanh(max(0.0, record.mars_score) / 4.0)
+            rank_discount = _rank_discount_cache[rank_idx]
+            # Use cached tanh values with fallback for out-of-range scores
+            rs_clamped = max(-20.0, min(20.0, record.ranking_score))
+            ms_clamped = max(-20.0, min(20.0, record.mars_score))
+            tanh_rs = _tanh_cache.get(rs_clamped, math.tanh(rs_clamped / 4.0))
+            tanh_ms = _tanh_cache.get(ms_clamped, math.tanh(ms_clamped / 4.0))
+            score_signal = 0.55 * tanh_rs + 0.35 * tanh_ms
             contribution = proposal_weight * (0.8 + score_signal) * rank_discount
+            seq = record.sequence
+            source_name = record.source
             for position in design_positions:
-                idx = position_to_index[int(position)]
-                aa = record.sequence[idx]
-                bucket = per_position[int(position)]
-                option_state = bucket.setdefault(
-                    aa,
-                    {
-                        "score": 0.0,
-                        "supporting_sources": set(),
-                    },
-                )
+                pos_int = int(position)
+                idx = position_to_index[pos_int]
+                aa = seq[idx]
+                bucket = per_position[pos_int]
+                option_state = bucket.get(aa)
+                if option_state is None:
+                    option_state = {"score": 0.0, "supporting_sources": set()}
+                    bucket[aa] = option_state
                 option_state["score"] = float(option_state["score"]) + contribution
-                option_state["supporting_sources"].add(record.source)
+                option_state["supporting_sources"].add(source_name)
 
     fields: list[PositionField] = []
     for position in sorted(per_position):
         idx = position_to_index[position]
         wt_residue = wt_seq[idx]
+        position_data = per_position[position]
         ranked = sorted(
-            per_position[position].items(),
+            position_data.items(),
             key=lambda item: (-float(item[1]["score"]), -len(item[1]["supporting_sources"]), item[0]),
         )[: int(top_k_per_position)]
-        if wt_residue not in {aa for aa, _ in ranked}:
-            ranked.append((wt_residue, per_position[position][wt_residue]))
+        # Check if wt_residue is in top-k using list comprehension instead of set
+        ranked_residues = [aa for aa, _ in ranked]
+        if wt_residue not in ranked_residues:
+            ranked.append((wt_residue, position_data[wt_residue]))
             ranked.sort(key=lambda item: (-float(item[1]["score"]), -len(item[1]["supporting_sources"]), item[0]))
             ranked = ranked[: int(top_k_per_position)]
         fields.append(
