@@ -1,0 +1,99 @@
+# Thermostable Protein Optimization Configuration
+# General-purpose configuration for enhanced protein thermal stability
+# Suitable for moderate-to-high temperature applications (37-80C)
+
+thermostability:
+  profile_type: "thermostable"
+  target_temp_range:
+    min_celsius: 37
+    max_celsius: 80
+    optimal_celsius: 55
+  design_strategy:
+    core_stabilization: true
+    surface_charge_neutralization: true
+    disulfide_enhancement: true
+    glycine_elimination: true
+
+  # Amino acid composition guidelines for general thermostability
+  aa_preferences:
+    increase:
+      - "P"  # Proline - rigidity, reduces unfolding
+      - "G"  # Glycine - flexibility in loops, allowed
+      - "A"  # Alanine - helical propensity, stable
+      - "L"  # Leucine - hydrophobic core, stable
+      - "I"  # Isoleucine - beta-preferring, stable
+      - "M"  # Methionine - moderate hydrophobic
+      - "Y"  # Tyrosine - polar aromatic
+      - "W"  # Tryptophan - large aromatic, stacking
+    decrease:
+      - "S"  # Serine - flexible, labile
+      - "T"  # Threonine - flexible
+      - "C"  # Cysteine - oxidation sensitive (unless disulfide)
+      - "N"  # Asparagine - deamidation risk
+      - "Q"  # Glutamine - deamidation risk
+      - "D"  # Aspartate - pH sensitive
+      - "E"  # Glutamate - pH sensitive
+
+  # Structural constraints
+  structural_constraints:
+    min_proline_positions: 2
+    max_glycine_positions: 5
+    disulfur_bridges: "auto"  # Detect and enhance
+    hydrophobic_core_fraction: 0.45
+
+  # Scoring adjustments
+  score_modifiers:
+    proline_bias: 1.2
+    disulfide_bonus: 1.5
+    glycine_penalty: 0.8
+    asparagine_penalty: 0.6
+    glutamine_penalty: 0.7
+    core_hydrophobicity_bonus: 1.2
+    surface_charge_neutral_bonus: 1.1
+
+generation:
+  sampling_temp: "0.1 0.2"
+  num_seq_per_target: 25
+  esm_if:
+    enabled: true
+    num_samples: 10
+    temperature: 8.0e-7
+    nogpu: false
+
+method:
+  score_weights:
+    oxidation: 0.9
+    surface: 0.9
+    manual: 1.3
+    evolution: 1.0
+    burden: 1.2
+    thermostability: 1.7
+
+evolution:
+  homologs_fasta: ""
+  aligned_fasta: ""
+  min_identity: 0.20
+  # Include thermophilic homologs if available
+  include_thermophilic: true
+  thermophile_identity_boost: 0.15
+
+validation:
+  required_checks:
+    - "proline_content"
+    - "glycine_content"
+    - "hydrophobicity"
+    - "disulfide_compatibility"
+    - "deamidation_sites"
+  thresholds:
+    min_proline: 3.0
+    max_glycine: 8.0
+    min_hydrophobic_core: 40.0
+    max_deamidation_risk: 3
+    est_thermal_tm: 50.0
+
+  # Structural validation
+  structure_validation:
+    verify_disulfide_pattern: true
+    check_surface_charge: true
+    validate_core_hydrophobicity: true
+    calculate_stability_score: true

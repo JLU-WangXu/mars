@@ -13,6 +13,12 @@ focused on orchestration:
 from .aggregation import merge_recommendation_maps, summarize_aligned_entries
 from .decoding import materialize_decoded_candidate_rows
 from .io import resolve_project_path
+from .thermostability_config import (
+    ThermostabilityProfile,
+    load_thermostability_profile,
+    merge_profile_with_config,
+    list_available_profiles,
+)
 from .mpnn import (
     ALPHABET,
     build_bias_and_omit,
@@ -32,8 +38,11 @@ __all__ = [
     "build_bias_and_omit",
     "build_parsed_index_maps",
     "collapse_mpnn_sequence",
+    "list_available_profiles",
     "load_parsed_chain_sequence",
+    "load_thermostability_profile",
     "materialize_decoded_candidate_rows",
+    "merge_profile_with_config",
     "merge_recommendation_maps",
     "normalize_parsed_names",
     "preprocess_pdb",
@@ -41,4 +50,5 @@ __all__ = [
     "resolve_project_path",
     "restore_template_mismatches",
     "summarize_aligned_entries",
+    "ThermostabilityProfile",
 ]

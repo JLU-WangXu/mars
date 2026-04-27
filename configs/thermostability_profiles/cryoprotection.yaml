@@ -1,0 +1,111 @@
+# Cryoprotection Design Configuration
+# Optimized for proteins requiring stability at low temperatures (-80 to 4C)
+# Suitable for cryo-EM, cold-adapted enzymes,冷冻保存应用
+
+thermostability:
+  profile_type: "cryoprotection"
+  target_temp_range:
+    min_celsius: -80
+    max_celsius: 20
+    optimal_celsius: 4
+  design_strategy:
+    surface_flexibility: true
+    reduced_core_rigidity: true
+    ice-binding_prevention: true
+    cold_adaptation_mode: true
+
+  # Amino acid composition guidelines for cold stability
+  aa_preferences:
+    increase:
+      - "S"  # Serine - flexible, cold-adapted enzymes enriched
+      - "T"  # Threonine - flexible side chains
+      - "G"  # Glycine - maximum backbone flexibility
+      - "A"  # Alanine - moderate flexibility
+      - "N"  # Asparagine - polar, surface exposed
+      - "Q"  # Glutamine - polar, surface exposed
+      - "D"  # Aspartate - negative charge, cold stability
+      - "E"  # Glutamate - negative charge
+      - "K"  # Lysine - positive charge, surface interactions
+    decrease:
+      - "P"  # Proline - rigid, cold-labile
+      - "V"  # Valine - hydrophobic, may cause cold denaturation
+      - "I"  # Isoleucine - hydrophobic
+      - "W"  # Tryptophan - large hydrophobic, cold sensitive
+      - "F"  # Phenylalanine - hydrophobic
+      - "L"  # Leucine - hydrophobic core preference
+
+  # Structural constraints
+  structural_constraints:
+    max_proline_positions: 2
+    min_surface_polar_fraction: 0.40
+    flexible_loop_length_max: 15
+    ice_nucleation_avoidance: true
+    surface_charge_density: "moderate"  # Balance to prevent aggregation
+
+  # Scoring adjustments for cryo-stability
+  score_modifiers:
+    flexibility_bonus: 1.3
+    proline_penalty: 0.5
+    glycine_bonus: 1.4
+    serine_threonine_bonus: 1.3
+    hydrophobic_core_penalty: 0.7
+    surface_polar_bonus: 1.2
+    charged_residue_bonus: 1.1
+    proline_flexibility_penalty: 0.6
+    ice_binding_avoidance_bonus: 1.0
+
+generation:
+  sampling_temp: "0.2 0.4"  # Higher temperature for diverse sequences
+  num_seq_per_target: 25
+  esm_if:
+    enabled: true
+    num_samples: 10
+    temperature: 1.2e-6
+    nogpu: false
+
+method:
+  score_weights:
+    oxidation: 0.7
+    surface: 1.4  # Surface properties critical for cold stability
+    manual: 1.2
+    evolution: 1.0
+    burden: 0.9
+    thermostability: 1.5
+    cryostability: 2.0
+
+evolution:
+  homologs_fasta: ""
+  aligned_fasta: ""
+  min_identity: 0.15  # Include more distant psychrophilic homologs
+  # Prioritize cold-adapted sequences
+  include_psychrophilic: true
+  psychrophile_identity_boost: 0.20
+  cold_adaptation_weight: 1.3
+
+validation:
+  required_checks:
+    - "flexibility_index"
+    - "surface_polarity"
+    - "proline_content"
+    - "hydrophobic_collapse"
+    - "ice_binding_sites"
+  thresholds:
+    max_proline: 2.0
+    min_flexibility: 0.50
+    min_surface_polar: 35.0
+    max_hydrophobic_collapse: 0.30
+    est_cold_tm: 20.0  # Estimated cold denaturation temperature
+
+  # Cryo-specific validations
+  cryo_validation:
+    check_aggregation_tendency: true
+    verify_flexibility_distribution: true
+    validate_cryo_em_compatibility: true
+    surface_charge_balance: true
+    ice_nucleation_sequence_avoidance: true
+
+  # Structural validation
+  structure_validation:
+    flexible_loop_analysis: true
+    surface_exposure_check: true
+    cold_denaturation_resistance: true
