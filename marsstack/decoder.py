@@ -48,42 +48,75 @@ class ConstrainedBeamDecoder:
         fields: list[PositionField],
         pairwise_energies: dict[tuple[int, int], dict[tuple[str, str], float]] | None = None,
     ) -> list[DecodedCandidate]:
-        beam: list[tuple[float, list[str], list[str], set[str]]] = [(0.0, list(wt_seq), [], set())]
+        # State: (score, sequence_tuple, mutation_tuple, support_frozenset)
+        beam: list[tuple[float, tuple[str, ...], tuple[str, ...], frozenset[str]]] = [
+            (0.0, tuple(wt_seq), (), frozenset())
+        ]
         ordered_fields = sorted(fields, key=lambda item: item.position)
         pairwise_energies = pairwise_energies or {}
 
-        for field in ordered_fields:
+        # Pre-compute previous indices for each field position
+        field_positions = [f.position for f in ordered_fields]
+
+        for field_idx, field in enumerate(ordered_fields):
             seq_idx = position_to_index[field.position]
-            next_beam: list[tuple[float, list[str], list[str], set[str]]] = []
+            # Get indices of previously processed fields (fields before current field)
+
+            next_beam: list[tuple[float, tuple[str, ...], tuple[str, ...], frozenset[str]]] = []
+
             for current_score, seq_chars, mutations, support_sources in beam:
+                seq_list = list(seq_chars)  # Convert to list only once per beam state
+
                 for option in field.options:
-                    new_chars = list(seq_chars)
-                    new_mutations = list(mutations)
-                    new_support_sources = set(support_sources)
-                    new_chars[seq_idx] = option.residue
+                    # Modify list in place, then convert back to tuple
+                    seq_list[seq_idx] = option.residue
+                    new_chars = tuple(seq_list)
+                    seq_list[seq_idx] = seq_chars[seq_idx]  # Restore for next option
+
                     updated_score = current_score + float(option.score)
-                    for prev_field in ordered_fields:
-                        if prev_field.position == field.position:
-                            break
-                        prev_idx = position_to_index[prev_field.position]
-                        prev_residue = new_chars[prev_idx]
-                        pair_key = (prev_field.position, field.position)
-                        reverse_pair_key = (field.position, prev_field.position)
+
+                    # Compute pairwise energies for all previous positions at once
+                    option_residue = option.residue
+                    for prev_idx in range(field_idx):
+                        prev_field_pos = field_positions[prev_idx]
+                        prev_residue = new_chars[position_to_index[prev_field_pos]]
+                        pair_key = (prev_field_pos, field.position)
                         pair_bucket = pairwise_energies.get(pair_key)
                         if pair_bucket is not None:
-                            updated_score += float(pair_bucket.get((prev_residue, option.residue), 0.0))
+                            updated_score += float(pair_bucket.get((prev_residue, option_residue), 0.0))
                         else:
-                            reverse_bucket = pairwise_energies.get(reverse_pair_key, {})
-                            updated_score += float(reverse_bucket.get((option.residue, prev_residue), 0.0))
-                    if option.residue != field.wt_residue:
+                            reverse_bucket = pairwise_energies.get((field.position, prev_field_pos), {})
+                            updated_score += float(reverse_bucket.get((option_residue, prev_residue), 0.0))
+
+                    # Track mutations using tuple (immutable, hashable)
+                    if option_residue != field.wt_residue:
                         updated_score -= self.mutation_penalty
-                        mutation = f"{field.wt_residue}{field.position}{option.residue}"
-                        if mutation not in new_mutations:
-                            new_mutations.append(mutation)
+                        mutation = f"{field.wt_residue}{field.position}{option_residue}"
+                        # Check set for O(1) lookup instead of list O(n)
+                        if mutation not in mutations:
+                            new_mutations = mutations + (mutation,)
+                        else:
+                            new_mutations = mutations
+                    else:
+                        new_mutations = mutations
+
+                    # Update support sources
                     if option.supporting_sources:
-                        new_support_sources.update(option.supporting_sources)
+                        new_support_sources = support_sources | frozenset(option.supporting_sources)
+                    else:
+                        new_support_sources = support_sources
+
                     next_beam.append((updated_score, new_chars, new_mutations, new_support_sources))
-            next_beam.sort(key=lambda item: (-item[0], -len(item[3]), len(item[2]), "".join(item[2])))
+
+            # Sort and prune beam - use mutation_count directly (pre-computed)
+            next_beam.sort(
+                key=lambda item: (
+                    -item[0],
+                    -len(item[3]),
+                    len(item[2]),
+                    item[2]  # Tuples are comparable, no string join needed
+                )
+            )
             beam = next_beam[: self.beam_size]
 
         candidates: list[DecodedCandidate] = []
