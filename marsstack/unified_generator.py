@@ -1,9 +1,30 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Literal, Any
 
 from .decoder import PositionField, ResidueOption
+from .multi_objective import (
+    ObjectiveVector,
+    MultiObjectiveCandidate,
+    compute_multi_objective_scores,
+    rank_candidates_multi_objective,
+    WeightsConfig,
+    create_default_csp_config,
+    compute_pareto_front,
+    crowding_distance,
+)
+from .ensemble_ranker import (
+    EnsembleRanker,
+    RankerConfig,
+    CandidateFeatures,
+    build_candidate_features,
+    rank_candidates,
+    analyze_feature_importance,
+    FEATURE_NAMES,
+)
 
 
 @dataclass
@@ -144,3 +165,193 @@ def serialize_position_fields(fields: list[PositionField]) -> list[dict[str, obj
         }
         for field in fields
     ]
+
+
+@dataclass
+class RankingContext:
+    """Context for ensemble ranking of candidates."""
+
+    wt_sequence: str = ""
+    design_positions: list[int] = field(default_factory=list)
+    oxidation_hotspots: list[int] = field(default_factory=list)
+    flexible_positions: list[int] = field(default_factory=list)
+    position_to_index: dict[int, int] = field(default_factory=dict)
+    features: list[Any] = field(default_factory=list)  # ResidueFeature list
+    profile: list[dict[str, float]] | None = None
+    asr_profile: list[dict[str, float]] | None = None
+    positive_profile: list[dict[str, float]] | None = None
+    negative_profile: list[dict[str, float]] | None = None
+    ranker_model_path: Path | None = None
+
+
+def build_candidates_from_proposals(
+    proposals: list[dict[str, Any]],
+    context: RankingContext,
+) -> list[CandidateFeatures]:
+    """Build CandidateFeatures from proposal rows."""
+    candidates = []
+    for i, row in enumerate(proposals):
+        sequence = str(row.get("sequence", ""))
+        mutations_str = str(row.get("mutations", ""))
+        mutations = mutations_str.split(";") if mutations_str and mutations_str != "WT" else []
+
+        source = str(row.get("source", ""))
+        source_group = str(row.get("source_group", ""))
+        supporting_str = str(row.get("supporting_sources", ""))
+        supporting_sources = supporting_str.split(";") if supporting_str else []
+
+        header_metrics = {}
+        header = str(row.get("header", ""))
+        if header:
+            for key in ["mpnn_score", "esm_recovery", "decoder_score"]:
+                if key in header.lower():
+                    try:
+                        header_metrics[key] = float(header.lower().split(key)[1].split()[0])
+                    except (IndexError, ValueError):
+                        pass
+
+        candidate = build_candidate_features(
+            sequence=sequence,
+            wt_sequence=context.wt_sequence,
+            mutations=mutations,
+            features=context.features,
+            profile=context.profile,
+            asr_profile=context.asr_profile,
+            positive_profile=context.positive_profile,
+            negative_profile=context.negative_profile,
+            design_positions=context.design_positions,
+            oxidation_hotspots=context.oxidation_hotspots,
+            flexible_positions=context.flexible_positions,
+            position_to_index=context.position_to_index,
+            decoder_score=float(row.get("decoder_score", 0.0)),
+            header_metrics=header_metrics,
+            supporting_sources=supporting_sources,
+            source=source,
+            source_group=source_group,
+            candidate_id=str(row.get("candidate_id", f"proposal_{i}")),
+            fusion_score=float(row.get("fusion_score", 0.0)) if "fusion_score" in row else None,
+        )
+
+        label = None
+        if "label" in row:
+            label = float(row["label"])
+        elif row.get("is_selected"):
+            label = 1.0
+        candidate.label = label
+
+        candidates.append(candidate)
+
+    return candidates
+
+
+def rank_proposals_with_ensemble(
+    proposals: list[dict[str, Any]],
+    context: RankingContext,
+    model_path: Path | None = None,
+    config: RankerConfig | None = None,
+    use_fallback: bool = True,
+) -> list[tuple[dict[str, Any], float]]:
+    """Rank proposals using ensemble learning ranker.
+
+    Args:
+        proposals: List of proposal dictionaries
+        context: Ranking context with features and profiles
+        model_path: Path to pre-trained model (optional)
+        config: Ranker configuration (used if model_path is None)
+        use_fallback: Use fallback scoring if no model available
+
+    Returns:
+        List of (proposal_dict, score) tuples sorted by score descending
+    """
+    candidates = build_candidates_from_proposals(proposals, context)
+
+    ranker = None
+    if model_path is not None and Path(model_path).exists():
+        try:
+            ranker = EnsembleRanker.load(model_path)
+        except Exception:
+            pass
+
+    if ranker is None and config is not None:
+        ranker = EnsembleRanker(config)
+
+    ranked_candidates = rank_candidates(candidates, model=ranker, config=config, use_fallback=use_fallback)
+
+    proposal_map = {str(row.get("candidate_id", f"proposal_{i}")): row for i, row in enumerate(proposals)}
+
+    ranked_proposals = []
+    for candidate, score in ranked_candidates:
+        proposal = proposal_map.get(candidate.candidate_id, {})
+        if not proposal:
+            proposal = {
+                "candidate_id": candidate.candidate_id,
+                "sequence": candidate.sequence,
+                "mutations": ";".join(candidate.mutations),
+                "source": candidate.source,
+                "source_group": candidate.source_group,
+                "supporting_sources": ";".join(candidate.supporting_sources),
+            }
+        ranked_proposals.append((proposal, float(score)))
+
+    return ranked_proposals
+
+
+def analyze_proposal_features(
+    proposals: list[dict[str, Any]],
+    context: RankingContext,
+    config: RankerConfig | None = None,
+) -> dict[str, Any]:
+    """Analyze feature importance for proposals.
+
+    Returns feature importance analysis from training a temporary model.
+    """
+    candidates = build_candidates_from_proposals(proposals, context)
+
+    has_labels = any(c.label is not None for c in candidates)
+    if not has_labels:
+        return {"error": "No labels available for feature importance analysis"}
+
+    return analyze_feature_importance(candidates, config=config)
+
+
+def train_ensemble_ranker(
+    training_data: list[dict[str, Any]],
+    context: RankingContext,
+    config: RankerConfig | None = None,
+    output_path: Path | None = None,
+) -> dict[str, Any]:
+    """Train an ensemble ranker on labeled proposal data.
+
+    Args:
+        training_data: List of proposal dicts with 'label' field (1.0 = selected, 0.0 = rejected)
+        context: Ranking context with features and profiles
+        config: Ranker configuration
+        output_path: Path to save the trained model
+
+    Returns:
+        Dictionary with training metrics and model path
+    """
+    config = config or RankerConfig()
+    candidates = build_candidates_from_proposals(training_data, context)
+
+    has_labels = [c for c in candidates if c.label is not None]
+    if len(has_labels) < 10:
+        return {"error": "Need at least 10 labeled samples for training"}
+
+    ranker = EnsembleRanker(config)
+
+    cv_metrics = ranker.cross_validate(candidates)
+    ranker.fit(candidates)
+
+    model_path = output_path or config.model_dir / f"ranker_{config.model_type}.pkl"
+    saved_path = ranker.save(model_path)
+
+    importance = ranker.get_feature_importance(top_k=10)
+
+    return {
+        "model_path": str(saved_path),
+        "cv_metrics": cv_metrics,
+        "top_features": [{"feature": f, "importance": float(imp)} for f, imp in importance],
+        "n_training_samples": len(candidates),
+        "model_type": config.model_type,
+    }
