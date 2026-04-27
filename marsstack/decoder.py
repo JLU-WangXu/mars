@@ -72,6 +72,8 @@ class DecodedCandidate:
     supporting_sources: list[str]
     thermostability_score: ThermostabilityScore | None = None
     mutation_effects: list[MutationEffect] | None = None
+    disulfide_score: float | None = None
+    predicted_disulfides: list[tuple[int, int]] | None = None
 
 
 class ConstrainedBeamDecoder:
@@ -89,6 +91,9 @@ class ConstrainedBeamDecoder:
         diversity_config: DiversityConfig | None = None,
         use_diversity_penalty: bool = False,
         use_diversity_selection: bool = False,
+        disulfide_constraints: list[DisulfideConstraint] | None = None,
+        enable_disulfide_design: bool = False,
+        disulfide_weight: float = 1.5,
     ) -> None:
         self.beam_size = int(beam_size)
         self.max_candidates = int(max_candidates)
@@ -102,6 +107,9 @@ class ConstrainedBeamDecoder:
         self.diversity_config = diversity_config or DiversityConfig()
         self.use_diversity_penalty = use_diversity_penalty
         self.use_diversity_selection = use_diversity_selection
+        self.disulfide_constraints = disulfide_constraints or []
+        self.enable_disulfide_design = bool(enable_disulfide_design)
+        self.disulfide_weight = float(disulfide_weight)
         self._diversity_tracker: DiversityTracker | None = None
 
     def _init_diversity_tracker(self, wt_seq: str) -> DiversityTracker:
