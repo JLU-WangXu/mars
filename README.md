@@ -30,6 +30,9 @@ Do **not** describe it as:
 
 ---
 
+<img width="2816" height="1536" alt="b493a07dec8264e6f78fe7f392cf4442" src="https://github.com/user-attachments/assets/9d5847a2-6654-4239-ae36-57e42e9bf178" />
+
+
 ## 2. What Works / 当前已经完成什么
 
 **EN**
@@ -71,6 +74,7 @@ What is not final:
 - 一些分支仍依赖外部组件
 
 ---
+<img width="1448" height="1086" alt="image" src="https://github.com/user-attachments/assets/f70f1e63-36dc-46f3-9513-2c1169ae3074" />
 
 ## 3. Original Mars Program vs Current Platform / 最初火星任务 vs 当前平台
 
