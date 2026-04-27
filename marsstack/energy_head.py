@@ -50,23 +50,38 @@ def build_pairwise_energy_tensor(
         key=lambda item: (-float(item.get("ranking_score", item.get("mars_score", 0.0))), -float(item.get("mars_score", 0.0))),
     )[: int(top_rows)]
 
+    # Precompute rank weights: 1/sqrt(rank) for rank in 1..top_rows
+    num_ranked = len(top_ranked)
+    rank_weights = [1.0 / math.sqrt(idx) for idx in range(1, num_ranked + 1)]
+
+    # Precompute score weights and ranking scores for all top-ranked rows
+    row_score_weights: list[float] = []
+    row_ranking_scores: list[float] = []
+    row_sequences: list[str] = []
+    for row in top_ranked:
+        ranking_score = float(row.get("ranking_score", row.get("mars_score", 0.0)))
+        row_ranking_scores.append(ranking_score)
+        row_score_weights.append(0.5 + 0.25 * math.tanh(ranking_score / 4.0))
+        row_sequences.append(str(row["sequence"]))
+
     pairwise: dict[tuple[int, int], dict[tuple[str, str], float]] = {}
     for i, pos_i in enumerate(field_positions):
+        seq_idx_i = position_to_index[pos_i]
         for pos_j in field_positions[i + 1 :]:
             pair = (pos_i, pos_j)
             reverse_pair = (pos_j, pos_i)
-            distance = pair_distances.get(pair, pair_distances.get(reverse_pair, 12.0))
+            # Use chained get for efficient reverse lookup
+            distance = pair_distances.get(pair) or pair_distances.get(reverse_pair, 12.0)
             if distance > 18.0:
                 continue
             distance_weight = 1.0 / max(1.0, distance / 4.0)
+            seq_idx_j = position_to_index[pos_j]
             bucket: dict[tuple[str, str], float] = {}
-            for rank_idx, row in enumerate(top_ranked, start=1):
-                sequence = str(row["sequence"])
-                aa_i = sequence[position_to_index[pos_i]]
-                aa_j = sequence[position_to_index[pos_j]]
-                rank_weight = 1.0 / math.sqrt(rank_idx)
-                score_weight = 0.5 + 0.25 * math.tanh(float(row.get("ranking_score", row.get("mars_score", 0.0))) / 4.0)
-                bucket[(aa_i, aa_j)] = bucket.get((aa_i, aa_j), 0.0) + distance_weight * rank_weight * score_weight
+            for rank_idx in range(num_ranked):
+                aa_i = row_sequences[rank_idx][seq_idx_i]
+                aa_j = row_sequences[rank_idx][seq_idx_j]
+                pair_key = (aa_i, aa_j)
+                bucket[pair_key] = bucket.get(pair_key, 0.0) + distance_weight * rank_weights[rank_idx] * row_score_weights[rank_idx]
             if bucket:
                 pairwise[pair] = {key: round(value, 6) for key, value in bucket.items()}
     return pairwise
