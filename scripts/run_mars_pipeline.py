@@ -5,8 +5,6 @@ import csv
 import json
 import subprocess
 import sys
-from collections import OrderedDict
-from itertools import product
 from pathlib import Path
 
 import pandas as pd
@@ -19,7 +17,11 @@ if str(ROOT) not in sys.path:
 
 import marsstack.field_network.proposals as proposal_ops
 
-from marsstack.evolution import (
+from marsstack.ancestral_field import build_ancestral_posterior_field  # noqa: F401  (re-exported for downstream consumers of this module)
+from marsstack.decoder import ConstrainedBeamDecoder
+from marsstack.energy_head import serialize_pairwise_energy_tensor
+from marsstack.evidence_field import serialize_evidence_fields
+from marsstack.evolution import (  # noqa: F401  (kept for downstream consumers)
     build_family_pair_profiles,
     build_structure_position_weights,
     build_profile,
@@ -31,595 +33,44 @@ from marsstack.evolution import (
     profile_recommendations,
     write_fasta,
 )
-from marsstack.ancestral_field import build_ancestral_posterior_field
-from marsstack.decoder import ConstrainedBeamDecoder
-from marsstack.energy_head import serialize_pairwise_energy_tensor
-from marsstack.evidence_field import serialize_evidence_fields
 from marsstack.field_network import (
     EvidencePaths,
     MarsFieldSystem,
     ProteinDesignContext,
+    ScoringInputs,
     build_neural_residue_field,
     build_runtime_neural_target_batch,
-    ScoringInputs,
-    score_candidate_rows,
+    score_candidate_rows,  # noqa: F401  (kept for downstream consumers)
     train_holdout_neural_model,
 )
 from marsstack.fusion_ranker import apply_learned_fusion_ranking, rank_rows_with_model
-from marsstack.mars_score import SAFE_OXIDATION_MAP, mutation_list, score_candidate
-from marsstack.topic_score import build_topic_local_recommendations
+from marsstack.mars_score import SAFE_OXIDATION_MAP, mutation_list, score_candidate  # noqa: F401  (kept for downstream consumers)
+from marsstack.pipeline import (
+    build_bias_and_omit,
+    build_parsed_index_maps,
+    collapse_mpnn_sequence,
+    load_parsed_chain_sequence,
+    materialize_decoded_candidate_rows,
+    merge_recommendation_maps,
+    normalize_parsed_names,
+    preprocess_pdb,
+    project_to_design_positions,
+    restore_template_mismatches,
+)
 from marsstack.structure_features import (
     analyze_structure,
     detect_flexible_surface_positions,
     detect_oxidation_hotspots,
 )
+from marsstack.topic_score import build_topic_local_recommendations  # noqa: F401  (kept for downstream consumers)
 
 
 VENDOR = ROOT / "vendors" / "ProteinMPNN"
-ALPHABET = "ACDEFGHIKLMNPQRSTVWYX"
-SOURCE_PRIORITY = {
-    "manual": 1,
-    "baseline_mpnn": 2,
-    "local_proposal": 3,
-    "mars_mpnn": 4,
-    "esm_if": 5,
-    "fusion_decoder": 6,
-    "neural_decoder": 7,
-}
 
 
 def run(cmd: list[str], cwd: Path) -> None:
     print("RUN", " ".join(cmd))
     subprocess.run(cmd, cwd=str(cwd), check=True)
-
-
-def resolve_project_path(path_str: str) -> Path:
-    path = Path(path_str)
-    if path.is_absolute():
-        return path
-    dataset_candidate = (ROOT / "datasets" / path).resolve()
-    if dataset_candidate.exists():
-        return dataset_candidate
-    return (ROOT / path).resolve()
-
-
-def preprocess_pdb(
-    src_path: Path,
-    dst_path: Path,
-    residue_renames: list[dict[str, object]] | None = None,
-) -> Path:
-    if not residue_renames:
-        dst_path.write_bytes(src_path.read_bytes())
-        return dst_path
-
-    rename_map: dict[tuple[str, int, str | None], str] = {}
-    for item in residue_renames:
-        chain = str(item["chain"])
-        residue_number = int(item["residue_number"])
-        from_name = str(item["from_name"]).upper() if item.get("from_name") else None
-        to_name = str(item["to_name"]).upper()
-        rename_map[(chain, residue_number, from_name)] = to_name
-
-    out_lines: list[str] = []
-    for line in src_path.read_text(encoding="utf-8", errors="ignore").splitlines():
-        if line.startswith(("ATOM  ", "HETATM")):
-            chain = line[21].strip()
-            try:
-                residue_number = int(line[22:26].strip())
-            except ValueError:
-                residue_number = None
-            resname = line[17:20].strip().upper()
-            replacement = None
-            if residue_number is not None:
-                replacement = rename_map.get((chain, residue_number, resname))
-                if replacement is None:
-                    replacement = rename_map.get((chain, residue_number, None))
-            if replacement is not None:
-                line = "ATOM  " + line[6:]
-                line = line[:17] + f"{replacement:>3}" + line[20:]
-        out_lines.append(line)
-
-    dst_path.write_text("\n".join(out_lines) + "\n", encoding="utf-8")
-    return dst_path
-
-
-def normalize_parsed_names(parsed_jsonl: Path) -> None:
-    lines = []
-    with parsed_jsonl.open("r", encoding="utf-8") as fh:
-        for line in fh:
-            obj = json.loads(line)
-            obj["name"] = Path(obj["name"]).stem
-            lines.append(obj)
-    with parsed_jsonl.open("w", encoding="utf-8") as fh:
-        for obj in lines:
-            fh.write(json.dumps(obj) + "\n")
-
-
-def load_parsed_chain_sequence(parsed_jsonl: Path, chain: str) -> str:
-    with parsed_jsonl.open("r", encoding="utf-8") as fh:
-        first = json.loads(next(fh))
-    return first[f"seq_chain_{chain}"]
-
-
-def build_parsed_index_maps(parsed_chain_seq: str, residue_numbers: list[int]) -> tuple[dict[int, int], list[int]]:
-    position_to_parsed_index: dict[int, int] = {}
-    parsed_keep_indices: list[int] = []
-    residue_iter = iter(residue_numbers)
-    current_residue = next(residue_iter, None)
-    for idx, aa in enumerate(parsed_chain_seq):
-        if aa == "-":
-            continue
-        if current_residue is None:
-            break
-        position_to_parsed_index[current_residue] = idx
-        parsed_keep_indices.append(idx)
-        current_residue = next(residue_iter, None)
-    if current_residue is not None:
-        raise ValueError("Parsed chain sequence does not cover all structure residue numbers.")
-    if len(parsed_keep_indices) != len(residue_numbers):
-        raise ValueError("Parsed chain sequence keep-indices do not match structure residue count.")
-    return position_to_parsed_index, parsed_keep_indices
-
-
-def collapse_mpnn_sequence(seq: str, parsed_keep_indices: list[int]) -> str:
-    if parsed_keep_indices and max(parsed_keep_indices) >= len(seq):
-        raise ValueError("ProteinMPNN sequence is shorter than expected parsed template length.")
-    return "".join(seq[idx] for idx in parsed_keep_indices)
-
-
-def restore_template_mismatches(
-    seq: str,
-    wt_seq: str,
-    mismatch_positions: list[int],
-    position_to_index: dict[int, int],
-) -> str:
-    if not mismatch_positions:
-        return seq
-    chars = list(seq)
-    for pos in mismatch_positions:
-        idx = position_to_index[pos]
-        chars[idx] = wt_seq[idx]
-    return "".join(chars)
-
-
-def project_to_design_positions(
-    seq: str,
-    wt_seq: str,
-    design_positions: list[int],
-    position_to_index: dict[int, int],
-) -> str:
-    chars = list(wt_seq)
-    for pos in design_positions:
-        idx = position_to_index[pos]
-        chars[idx] = seq[idx]
-    return "".join(chars)
-
-
-def build_bias_and_omit(
-    protein_name: str,
-    chain: str,
-    seq_len: int,
-    manual_bias: dict[int, dict[str, float]],
-    oxidation_hotspots: list[int],
-    wt_seq: str,
-    position_to_index: dict[int, int],
-    position_to_parsed_index: dict[int, int],
-    bias_out: Path,
-    omit_out: Path,
-) -> None:
-    bias = [[[0.0 for _ in ALPHABET] for _ in range(seq_len)]]
-    bias_rows = bias[0]
-    for pos, aa_bias in manual_bias.items():
-        idx = position_to_parsed_index[pos]
-        for aa, val in aa_bias.items():
-            bias_rows[idx][ALPHABET.index(aa)] = float(val)
-
-    omit_items = []
-    for pos in oxidation_hotspots:
-        idx = position_to_parsed_index[pos]
-        wt = wt_seq[position_to_index[pos]]
-        if wt == "M":
-            allowed = {"L", "I", "V"}
-            forbidden = "".join([aa for aa in ALPHABET[:-1] if aa not in allowed])
-            omit_items.append([[idx + 1], forbidden])
-
-    bias_obj = {protein_name: {chain: bias_rows}}
-    omit_obj = {protein_name: {chain: omit_items}}
-    bias_out.write_text(json.dumps(bias_obj) + "\n", encoding="utf-8")
-    omit_out.write_text(json.dumps(omit_obj) + "\n", encoding="utf-8")
-
-
-def parse_mpnn_fasta(path: Path) -> list[dict[str, object]]:
-    entries = []
-    header = None
-    seq = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith(">"):
-            if header is not None:
-                entries.append({"header": header, "sequence": "".join(seq)})
-            header = line[1:]
-            seq = []
-        else:
-            seq.append(line.strip())
-    if header is not None:
-        entries.append({"header": header, "sequence": "".join(seq)})
-    return [e for e in entries if "sample=" in e["header"]]
-
-
-def parse_sample_fasta(path: Path) -> list[dict[str, object]]:
-    entries = []
-    header = None
-    seq = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith(">"):
-            if header is not None:
-                entries.append({"header": header, "sequence": "".join(seq)})
-            header = line[1:]
-            seq = []
-        else:
-            seq.append(line.strip())
-    if header is not None:
-        entries.append({"header": header, "sequence": "".join(seq)})
-    return [e for e in entries if "sample=" in e["header"]]
-
-
-def write_shortlist_fasta(rows: list[dict[str, object]], out_path: Path) -> None:
-    with out_path.open("w", encoding="utf-8") as fh:
-        for row in rows:
-            fh.write(f">{row['candidate_id']} {row['mutations']} {row['source']}\n")
-            seq = row["sequence"]
-            for i in range(0, len(seq), 80):
-                fh.write(seq[i : i + 80] + "\n")
-
-
-def classify_source_group(source: str) -> str:
-    if source == "manual":
-        return "manual_control"
-    if source == "local_proposal":
-        return "heuristic_local"
-    return "learned"
-
-
-def summarize_aligned_entries(entries: list[tuple[str, str]], wt_seq: str) -> tuple[int, float]:
-    if not entries:
-        return 0, 0.0
-    accepted = max(0, len(entries) - 1)
-    if accepted <= 0:
-        return accepted, 0.0
-    coverage = [
-        sum(1 for _, seq in entries[1:] if seq[i] != "-")
-        for i in range(len(wt_seq))
-    ]
-    mean_coverage = round(sum(coverage) / max(1, len(coverage) * accepted), 3)
-    return accepted, mean_coverage
-
-
-def merge_recommendation_maps(
-    *maps: dict[int, dict[str, float]] | None,
-    top_k: int = 4,
-) -> dict[int, dict[str, float]]:
-    merged: dict[int, dict[str, float]] = {}
-    for rec_map in maps:
-        if not rec_map:
-            continue
-        for pos, aa_scores in rec_map.items():
-            bucket = merged.setdefault(int(pos), {})
-            for aa, score in aa_scores.items():
-                bucket[aa] = round(max(float(score), float(bucket.get(aa, 0.0))), 4)
-
-    final: dict[int, dict[str, float]] = {}
-    for pos, aa_scores in merged.items():
-        ranked = sorted(aa_scores.items(), key=lambda item: (-item[1], item[0]))[:top_k]
-        if ranked:
-            final[pos] = {aa: score for aa, score in ranked}
-    return final
-
-
-def register_candidate(
-    candidates: "OrderedDict[str, dict[str, object]]",
-    entry: dict[str, object],
-) -> None:
-    seq = str(entry["sequence"])
-    source = str(entry["source"])
-    source_group = classify_source_group(source)
-    if seq not in candidates:
-        new_entry = dict(entry)
-        new_entry["source_group"] = source_group
-        new_entry["supporting_sources"] = [source]
-        candidates[seq] = new_entry
-        return
-
-    current = candidates[seq]
-    current_sources = set(current.get("supporting_sources", []))
-    current_sources.add(source)
-    current["supporting_sources"] = sorted(current_sources)
-    if SOURCE_PRIORITY.get(source, 0) > SOURCE_PRIORITY.get(str(current["source"]), 0):
-        current["candidate_id"] = entry["candidate_id"]
-        current["source"] = source
-        current["source_group"] = source_group
-        if "header" in entry:
-            current["header"] = entry.get("header", "")
-
-
-def build_local_proposal_candidates(
-    wt_seq: str,
-    design_positions: list[int],
-    position_to_index: dict[int, int],
-    features: list[object],
-    manual_bias: dict[int, dict[str, float]],
-    oxidation_hotspots: list[int],
-    flexible_positions: list[int],
-    profile: list[dict[str, float]] | None,
-    family_recommendations: dict[int, dict[str, float]] | None = None,
-    asr_recommendations: dict[int, dict[str, float]] | None = None,
-    topic_name: str | None = None,
-    topic_cfg: dict[str, object] | None = None,
-    max_variants_per_position: int = 5,
-    max_candidates: int = 256,
-) -> list[dict[str, object]]:
-    oxidation_set = set(oxidation_hotspots)
-    flexible_set = set(flexible_positions)
-    hydrating = {"Q": 0.7, "N": 0.6, "E": 0.45, "D": 0.35, "S": 0.2, "T": 0.2}
-    topic_recommendations = build_topic_local_recommendations(
-        topic_name=topic_name,
-        wt_seq=wt_seq,
-        features=features,
-        design_positions=design_positions,
-        position_to_index=position_to_index,
-        topic_cfg=topic_cfg,
-    )
-
-    per_position_choices: list[tuple[int, str, list[tuple[str, float]]]] = []
-    for pos in design_positions:
-        idx = position_to_index[pos]
-        wt = wt_seq[idx]
-        aa_scores: dict[str, float] = {wt: 0.0}
-
-        for aa, val in manual_bias.get(pos, {}).items():
-            aa_scores[aa] = max(aa_scores.get(aa, float("-inf")), float(val))
-
-        if pos in oxidation_set:
-            for aa, val in SAFE_OXIDATION_MAP.get(wt, {}).items():
-                aa_scores[aa] = max(aa_scores.get(aa, float("-inf")), 0.6 + 0.4 * float(val))
-
-        if pos in flexible_set and pos not in oxidation_set:
-            for aa, val in hydrating.items():
-                if aa != wt:
-                    aa_scores[aa] = max(aa_scores.get(aa, float("-inf")), float(val))
-
-        if profile is not None:
-            for aa, prob in sorted(profile[idx].items(), key=lambda item: (-item[1], item[0]))[:4]:
-                if aa == "-" or aa == wt:
-                    continue
-                if pos in oxidation_set:
-                    allowed_hotspot = set(SAFE_OXIDATION_MAP.get(wt, {})) | set(manual_bias.get(pos, {}))
-                    if aa not in allowed_hotspot:
-                        continue
-                if prob >= 0.05:
-                    aa_scores[aa] = max(aa_scores.get(aa, float("-inf")), 0.4 + float(prob))
-
-        if family_recommendations is not None:
-            for aa, delta in family_recommendations.get(pos, {}).items():
-                if aa == wt:
-                    continue
-                if pos in oxidation_set:
-                    allowed_hotspot = set(SAFE_OXIDATION_MAP.get(wt, {})) | set(manual_bias.get(pos, {}))
-                    if aa not in allowed_hotspot:
-                        continue
-                aa_scores[aa] = max(aa_scores.get(aa, float("-inf")), 0.45 + 1.2 * float(delta))
-
-        if asr_recommendations is not None:
-            for aa, prob in asr_recommendations.get(pos, {}).items():
-                if aa == wt:
-                    continue
-                if pos in oxidation_set:
-                    allowed_hotspot = set(SAFE_OXIDATION_MAP.get(wt, {})) | set(manual_bias.get(pos, {}))
-                    if aa not in allowed_hotspot:
-                        continue
-                aa_scores[aa] = max(aa_scores.get(aa, float("-inf")), 0.35 + 1.1 * float(prob))
-
-        for aa, bias in topic_recommendations.get(pos, {}).items():
-            if aa == wt and aa not in aa_scores:
-                aa_scores[aa] = 0.0
-            aa_scores[aa] = max(aa_scores.get(aa, float("-inf")), float(bias))
-
-        ranked = sorted(aa_scores.items(), key=lambda item: (-item[1], item[0]))
-        trimmed = ranked[:max_variants_per_position]
-        if wt not in {aa for aa, _ in trimmed}:
-            trimmed = [(wt, 0.0)] + trimmed[: max_variants_per_position - 1]
-        per_position_choices.append((pos, wt, trimmed))
-
-    seq_entries: list[tuple[float, str, str]] = []
-    choice_products = [choices for _, _, choices in per_position_choices]
-    total_states = 1
-    for choices in choice_products:
-        total_states *= max(1, len(choices))
-    if total_states > 20000:
-        raise ValueError(f"Local proposal branch would enumerate too many states: {total_states}")
-
-    for combo in product(*choice_products):
-        seq_chars = list(wt_seq)
-        name_parts: list[str] = []
-        local_priority = 0.0
-        mutation_count = 0
-        for (pos, wt, _), (aa, aa_score) in zip(per_position_choices, combo):
-            idx = position_to_index[pos]
-            seq_chars[idx] = aa
-            if aa != wt:
-                mutation_count += 1
-                name_parts.append(f"{wt}{pos}{aa}")
-                local_priority += aa_score
-        if mutation_count == 0:
-            continue
-        local_priority -= 0.15 * max(0, mutation_count - 1)
-        seq_entries.append((local_priority, "".join(name_parts), "".join(seq_chars)))
-
-    seq_entries.sort(key=lambda item: (-item[0], item[1]))
-    shortlisted = seq_entries[:max_candidates]
-    return [
-        {
-            "candidate_id": f"local_{idx:03d}",
-            "source": "local_proposal",
-            "sequence": seq,
-        }
-        for idx, (_, _, seq) in enumerate(shortlisted, start=1)
-    ]
-
-
-def build_manual_candidates(
-    wt_seq: str,
-    manual_bias: dict[int, dict[str, float]],
-    position_to_index: dict[int, int],
-) -> list[dict[str, object]]:
-    candidates = [{"candidate_id": "manual_wt", "source": "manual", "sequence": wt_seq}]
-    top_by_pos: dict[int, str] = {}
-    for pos, aa_bias in manual_bias.items():
-        idx = position_to_index[pos]
-        ranked = sorted(
-            [(aa, val) for aa, val in aa_bias.items() if aa != wt_seq[idx] and val > 0],
-            key=lambda x: (-x[1], x[0]),
-        )
-        if not ranked:
-            continue
-        top_aa = ranked[0][0]
-        top_by_pos[pos] = top_aa
-        seq = list(wt_seq)
-        seq[idx] = top_aa
-        candidates.append(
-            {
-                "candidate_id": f"manual_{wt_seq[idx]}{pos}{top_aa}",
-                "source": "manual",
-                "sequence": "".join(seq),
-            }
-        )
-
-    if top_by_pos:
-        seq = list(wt_seq)
-        name_parts = []
-        for pos in sorted(top_by_pos):
-            idx = position_to_index[pos]
-            seq[idx] = top_by_pos[pos]
-            name_parts.append(f"{wt_seq[idx]}{pos}{top_by_pos[pos]}")
-        candidates.append(
-            {
-                "candidate_id": f"manual_combo_{'_'.join(name_parts)}",
-                "source": "manual",
-                "sequence": "".join(seq),
-            }
-        )
-    return candidates
-
-
-def materialize_decoded_candidate_rows(
-    *,
-    decoded_candidates: list[object],
-    source_name: str,
-    wt_seq: str,
-    features: list[object],
-    oxidation_hotspots: list[int],
-    flexible_positions: list[int],
-    profile: list[dict[str, float]] | None,
-    asr_profile: list[dict[str, float]] | None,
-    family_positive_profile: list[dict[str, float]] | None,
-    family_negative_profile: list[dict[str, float]] | None,
-    manual_bias: dict[int, dict[str, float]],
-    design_positions: list[int],
-    score_weights: dict[str, float],
-    position_to_index: dict[int, int],
-    evolution_position_weights: dict[int, float],
-    residue_numbers: list[int],
-    evo_cfg: dict[str, object],
-    topic_name: str,
-    topic_cfg: dict[str, object],
-    existing_sequences: set[str],
-    min_mars_score: float,
-    min_support_count: int,
-    max_mars_gap_vs_best: float,
-    max_mars_gap_vs_best_learned: float,
-    best_existing_mars_score: float,
-    best_existing_learned_mars_score: float,
-    skip_bad_hotspots: bool = True,
-) -> tuple[list[dict[str, object]], int, dict[str, int]]:
-    generated_rows: list[dict[str, object]] = []
-    rejected_count = 0
-    rejection_reasons = {
-        "bad_hotspot": 0,
-        "low_mars_score": 0,
-        "low_support": 0,
-        "mars_gap_vs_best": 0,
-        "mars_gap_vs_best_learned": 0,
-    }
-    for idx, item in enumerate(decoded_candidates, start=1):
-        if item.sequence in existing_sequences:
-            continue
-        res = score_candidate(
-            wt_seq=wt_seq,
-            seq=item.sequence,
-            features=features,
-            oxidation_hotspots=oxidation_hotspots,
-            flexible_positions=flexible_positions,
-            profile=profile,
-            asr_profile=asr_profile,
-            family_positive_profile=family_positive_profile,
-            family_negative_profile=family_negative_profile,
-            manual_preferred=manual_bias,
-            evolution_positions=design_positions,
-            mutable_positions=design_positions,
-            term_weights=score_weights,
-            position_to_index=position_to_index,
-            evolution_position_weights=evolution_position_weights,
-            residue_numbers=residue_numbers,
-            profile_prior_scale=float(evo_cfg.get("profile_prior_scale", 0.35)),
-            asr_prior_scale=float(evo_cfg.get("asr_prior_scale", 0.45)),
-            family_prior_scale=float(evo_cfg.get("family_prior_scale", 0.60)),
-            topic_name=topic_name,
-            topic_cfg=topic_cfg,
-        )
-        note_items = list(res.notes)
-        if skip_bad_hotspots and any(note.startswith("bad_hotspot_choice_") for note in note_items):
-            rejected_count += 1
-            rejection_reasons["bad_hotspot"] += 1
-            continue
-        if res.total < min_mars_score:
-            rejected_count += 1
-            rejection_reasons["low_mars_score"] += 1
-            continue
-        if len(item.supporting_sources) < min_support_count:
-            rejected_count += 1
-            rejection_reasons["low_support"] += 1
-            continue
-        if (best_existing_mars_score - res.total) > max_mars_gap_vs_best:
-            rejected_count += 1
-            rejection_reasons["mars_gap_vs_best"] += 1
-            continue
-        if (best_existing_learned_mars_score - res.total) > max_mars_gap_vs_best_learned:
-            rejected_count += 1
-            rejection_reasons["mars_gap_vs_best_learned"] += 1
-            continue
-        header_prefix = "decoder" if source_name == "fusion_decoder" else source_name
-        generated_rows.append(
-            {
-                "candidate_id": f"{source_name}_{idx:03d}",
-                "source": source_name,
-                "source_group": "learned",
-                "supporting_sources": ";".join([source_name] + list(item.supporting_sources)),
-                "mutations": ";".join(mutation_list(wt_seq, item.sequence, residue_numbers=residue_numbers)) or "WT",
-                "mars_score": res.total,
-                "notes": ";".join(note_items),
-                "sequence": item.sequence,
-                "header": f"{header_prefix}_score={item.decoder_score};mutation_count={item.mutation_count};support_count={len(item.supporting_sources)}",
-                "score_oxidation": res.components["oxidation"],
-                "score_surface": res.components["surface"],
-                "score_manual": res.components["manual"],
-                "score_evolution": res.components["evolution"],
-                "score_burden": res.components["burden"],
-                "score_topic_sequence": res.components["topic_sequence"],
-                "score_topic_structure": res.components["topic_structure"],
-                "score_topic_evolution": res.components["topic_evolution"],
-            }
-        )
-        existing_sequences.add(item.sequence)
-    return generated_rows, rejected_count, rejection_reasons
 
 
 def main() -> None:
@@ -1358,120 +809,73 @@ def main() -> None:
         row.setdefault("neural_policy_z", "")
         row.setdefault("neural_policy_score", "")
 
+    _CANDIDATE_CSV_FIELDS = [
+        "candidate_id",
+        "source",
+        "source_group",
+        "supporting_sources",
+        "mutations",
+        "selection_score",
+        "selection_score_name",
+        "engineering_score",
+        "neural_score",
+        "neural_score_z",
+        "neural_rank",
+        "neural_selection_pred",
+        "neural_selection_z",
+        "neural_engineering_pred",
+        "neural_engineering_z",
+        "neural_policy_pred",
+        "neural_policy_z",
+        "neural_policy_score",
+        "ranking_score",
+        "ranking_model",
+        "fusion_score",
+        "ranking_score_raw",
+        "ranking_score_z",
+        "ranking_score_bounded",
+        "ranking_score_mars_calibrated",
+        "ranking_penalty",
+        "ranking_penalty_reasons",
+        "mars_score",
+        "score_oxidation",
+        "score_surface",
+        "score_manual",
+        "score_evolution",
+        "score_burden",
+        "score_topic_sequence",
+        "score_topic_structure",
+        "score_topic_evolution",
+        "fusion_linear_generator",
+        "fusion_linear_structure",
+        "fusion_linear_evolution",
+        "fusion_linear_consensus",
+        "fusion_linear_topic",
+        "fusion_linear_context",
+        "fusion_linear_misc",
+        "fusion_interaction",
+        "fusion_raw_feature_norm",
+        "notes",
+        "sequence",
+        "header",
+    ]
+
+    def _write_candidates_csv(target_path: Path, candidate_rows: list[dict[str, object]]) -> None:
+        with target_path.open("w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(fh, fieldnames=_CANDIDATE_CSV_FIELDS)
+            writer.writeheader()
+            writer.writerows(candidate_rows)
+
     if decoder_generated_rows:
-        with (out_root / "decoder_generated_candidates.csv").open("w", newline="", encoding="utf-8") as fh:
-            writer = csv.DictWriter(
-                fh,
-                fieldnames=[
-                    "candidate_id",
-                    "source",
-                    "source_group",
-                    "supporting_sources",
-                    "mutations",
-                    "selection_score",
-                    "selection_score_name",
-                    "engineering_score",
-                    "neural_score",
-                    "neural_score_z",
-                    "neural_rank",
-                    "neural_selection_pred",
-                    "neural_selection_z",
-                    "neural_engineering_pred",
-                    "neural_engineering_z",
-                    "neural_policy_pred",
-                    "neural_policy_z",
-                    "neural_policy_score",
-                    "ranking_score",
-                    "ranking_model",
-                    "fusion_score",
-                    "ranking_score_raw",
-                    "ranking_score_z",
-                    "ranking_score_bounded",
-                    "ranking_score_mars_calibrated",
-                    "ranking_penalty",
-                    "ranking_penalty_reasons",
-                    "mars_score",
-                    "score_oxidation",
-                    "score_surface",
-                    "score_manual",
-                    "score_evolution",
-                    "score_burden",
-                    "score_topic_sequence",
-                    "score_topic_structure",
-                    "score_topic_evolution",
-                    "fusion_linear_generator",
-                    "fusion_linear_structure",
-                    "fusion_linear_evolution",
-                    "fusion_linear_consensus",
-                    "fusion_linear_topic",
-                    "fusion_linear_context",
-                    "fusion_linear_misc",
-                    "fusion_interaction",
-                    "fusion_raw_feature_norm",
-                    "notes",
-                    "sequence",
-                    "header",
-                ],
-            )
-            writer.writeheader()
-            writer.writerows([row for row in rows if row["source"] == "fusion_decoder"])
+        _write_candidates_csv(
+            out_root / "decoder_generated_candidates.csv",
+            [row for row in rows if row["source"] == "fusion_decoder"],
+        )
     if neural_decoder_generated_rows:
-        with (out_root / "neural_decoder_generated_candidates.csv").open("w", newline="", encoding="utf-8") as fh:
-            writer = csv.DictWriter(
-                fh,
-                fieldnames=[
-                    "candidate_id",
-                    "source",
-                    "source_group",
-                    "supporting_sources",
-                    "mutations",
-                    "selection_score",
-                    "selection_score_name",
-                    "engineering_score",
-                    "neural_score",
-                    "neural_score_z",
-                    "neural_rank",
-                    "neural_selection_pred",
-                    "neural_selection_z",
-                    "neural_engineering_pred",
-                    "neural_engineering_z",
-                    "neural_policy_pred",
-                    "neural_policy_z",
-                    "neural_policy_score",
-                    "ranking_score",
-                    "ranking_model",
-                    "fusion_score",
-                    "ranking_score_raw",
-                    "ranking_score_z",
-                    "ranking_score_bounded",
-                    "ranking_score_mars_calibrated",
-                    "ranking_penalty",
-                    "ranking_penalty_reasons",
-                    "mars_score",
-                    "score_oxidation",
-                    "score_surface",
-                    "score_manual",
-                    "score_evolution",
-                    "score_burden",
-                    "score_topic_sequence",
-                    "score_topic_structure",
-                    "score_topic_evolution",
-                    "fusion_linear_generator",
-                    "fusion_linear_structure",
-                    "fusion_linear_evolution",
-                    "fusion_linear_consensus",
-                    "fusion_linear_topic",
-                    "fusion_linear_context",
-                    "fusion_linear_misc",
-                    "fusion_interaction",
-                    "fusion_raw_feature_norm",
-                    "notes",
-                    "sequence",
-                    "header",
-                ],
-            )
-            writer.writeheader()
-            writer.writerows([row for row in rows if row["source"] == "neural_decoder"])
+        _write_candidates_csv(
+            out_root / "neural_decoder_generated_candidates.csv",
+            [row for row in rows if row["source"] == "neural_decoder"],
+        )
     if fusion_model is not None:
         (out_root / "learned_fusion_model.json").write_text(
             json.dumps(fusion_model, indent=2),
@@ -1482,62 +886,7 @@ def main() -> None:
         encoding="utf-8",
     )
 
-    with (out_root / "combined_ranked_candidates.csv").open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(
-            fh,
-            fieldnames=[
-                "candidate_id",
-                "source",
-                "source_group",
-                "supporting_sources",
-                "mutations",
-                "selection_score",
-                "selection_score_name",
-                "engineering_score",
-                "neural_score",
-                "neural_score_z",
-                "neural_rank",
-                "neural_selection_pred",
-                "neural_selection_z",
-                "neural_engineering_pred",
-                "neural_engineering_z",
-                "neural_policy_pred",
-                "neural_policy_z",
-                "neural_policy_score",
-                "ranking_score",
-                "ranking_model",
-                "fusion_score",
-                "ranking_score_raw",
-                "ranking_score_z",
-                "ranking_score_bounded",
-                "ranking_score_mars_calibrated",
-                "ranking_penalty",
-                "ranking_penalty_reasons",
-                "mars_score",
-                "score_oxidation",
-                "score_surface",
-                "score_manual",
-                "score_evolution",
-                "score_burden",
-                "score_topic_sequence",
-                "score_topic_structure",
-                "score_topic_evolution",
-                "fusion_linear_generator",
-                "fusion_linear_structure",
-                "fusion_linear_evolution",
-                "fusion_linear_consensus",
-                "fusion_linear_topic",
-                "fusion_linear_context",
-                "fusion_linear_misc",
-                "fusion_interaction",
-                "fusion_raw_feature_norm",
-                "notes",
-                "sequence",
-                "header",
-            ],
-        )
-        writer.writeheader()
-        writer.writerows(rows)
+    _write_candidates_csv(out_root / "combined_ranked_candidates.csv", rows)
 
     neural_summary: dict[str, object] = {}
     neural_reranked_path = out_root / "neural_field_rerank" / "neural_reranked_candidates.csv"
@@ -1589,62 +938,7 @@ def main() -> None:
                 row["neural_policy_pred"] = match["neural_policy_pred"]
                 row["neural_policy_z"] = match["neural_policy_z"]
                 row["neural_policy_score"] = match["neural_policy_score"]
-            with (out_root / "combined_ranked_candidates.csv").open("w", newline="", encoding="utf-8") as fh:
-                writer = csv.DictWriter(
-                    fh,
-                    fieldnames=[
-                        "candidate_id",
-                        "source",
-                        "source_group",
-                        "supporting_sources",
-                        "mutations",
-                        "selection_score",
-                        "selection_score_name",
-                        "engineering_score",
-                        "neural_score",
-                        "neural_score_z",
-                        "neural_rank",
-                        "neural_selection_pred",
-                        "neural_selection_z",
-                        "neural_engineering_pred",
-                        "neural_engineering_z",
-                        "neural_policy_pred",
-                        "neural_policy_z",
-                        "neural_policy_score",
-                        "ranking_score",
-                        "ranking_model",
-                        "fusion_score",
-                        "ranking_score_raw",
-                        "ranking_score_z",
-                        "ranking_score_bounded",
-                        "ranking_score_mars_calibrated",
-                        "ranking_penalty",
-                        "ranking_penalty_reasons",
-                        "mars_score",
-                        "score_oxidation",
-                        "score_surface",
-                        "score_manual",
-                        "score_evolution",
-                        "score_burden",
-                        "score_topic_sequence",
-                        "score_topic_structure",
-                        "score_topic_evolution",
-                        "fusion_linear_generator",
-                        "fusion_linear_structure",
-                        "fusion_linear_evolution",
-                        "fusion_linear_consensus",
-                        "fusion_linear_topic",
-                        "fusion_linear_context",
-                        "fusion_linear_misc",
-                        "fusion_interaction",
-                        "fusion_raw_feature_norm",
-                        "notes",
-                        "sequence",
-                        "header",
-                    ],
-                )
-                writer.writeheader()
-                writer.writerows(rows)
+            _write_candidates_csv(out_root / "combined_ranked_candidates.csv", rows)
 
     shortlist = rows[: args.top_k]
     proposal_ops.write_shortlist_fasta(shortlist, out_root / "shortlist_top.fasta")
