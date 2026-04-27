@@ -74,6 +74,7 @@ What is not final:
 - 一些分支仍依赖外部组件
 
 ---
+<img width="1448" height="1086" alt="image" src="https://github.com/user-attachments/assets/f70f1e63-36dc-46f3-9513-2c1169ae3074" />
 
 ## 3. Original Mars Program vs Current Platform / 最初火星任务 vs 当前平台
 
