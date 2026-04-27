@@ -355,3 +355,216 @@ def train_ensemble_ranker(
         "n_training_samples": len(candidates),
         "model_type": config.model_type,
     }
+
+
+# =============================================================================
+# Multi-objective Candidate Ranking Integration
+# =============================================================================
+
+
+@dataclass
+class DecodedCandidateMO:
+    """Extended decoded candidate with multi-objective scores."""
+
+    sequence: str
+    mutations: list[str]
+    decoder_score: float
+    mutation_count: int
+    supporting_sources: list[str]
+    objectives: ObjectiveVector | None = None
+    pareto_rank: int = 0
+    crowding_distance: float = 0.0
+
+
+def compute_candidate_objectives(
+    sequence: str,
+    wt_seq: str,
+    position_to_index: dict[int, int],
+    stability_score: float | None = None,
+    livability_score: float | None = None,
+    mars_score: float | None = None,
+) -> ObjectiveVector:
+    """
+    Compute multi-objective vector for a candidate sequence.
+
+    Objectives:
+    - Stability: based on MARS score and decoder score
+    - Livability: preservation of active sites (heuristic)
+    - Expressivity: mutation count normalized
+    - Diversity: diversity of mutations
+    """
+    # Stability: combine MARS score and decoder score
+    if stability_score is None:
+        stability_score = (mars_score or 0.0) * 0.5 + (1.0 / (1.0 + math.exp(-decoder_score))) * 0.5
+    else:
+        stability_score = stability_score
+
+    # Livability: heuristic based on mutation count
+    mutation_count = sum(1 for i, aa in enumerate(sequence) if i < len(wt_seq) and aa != wt_seq[i])
+    livability = livability_score if livability_score is not None else 0.8 - 0.05 * min(mutation_count, 16)
+
+    # Expressivity: normalized mutation count
+    expressivity = min(1.0, mutation_count / max(1, len(wt_seq) * 0.15))
+
+    # Diversity: based on unique mutation positions
+    mutation_positions = set()
+    for i, (a, b) in enumerate(zip(sequence, wt_seq)):
+        if a != b:
+            mutation_positions.add(i)
+    diversity = min(1.0, len(mutation_positions) / max(1, len(wt_seq) * 0.1))
+
+    return ObjectiveVector(
+        stability=stability_score,
+        livability=livability,
+        expressivity=expressivity,
+        diversity=diversity,
+    )
+
+
+def rank_with_multi_objective(
+    decoded_candidates: list[DecodedCandidateMO],
+    wt_seq: str,
+    position_to_index: dict[int, int],
+    method: Literal["pareto", "weighted_sum", "nsga2", "csp"] = "pareto",
+    weights: WeightsConfig | None = None,
+    top_k: int = 10,
+) -> list[DecodedCandidateMO]:
+    """
+    Rank decoded candidates using multi-objective optimization.
+
+    Args:
+        decoded_candidates: List of decoded candidates
+        wt_seq: Wild-type sequence
+        position_to_index: Position to index mapping
+        method: Optimization method ("pareto", "weighted_sum", "nsga2", "csp")
+        weights: Weights for weighted_sum method
+        top_k: Number of top candidates to return
+
+    Returns:
+        Ranked list of candidates
+    """
+    # Convert to multi-objective candidates
+    mo_candidates: list[MultiObjectiveCandidate] = []
+    for cand in decoded_candidates:
+        objectives = compute_candidate_objectives(
+            sequence=cand.sequence,
+            wt_seq=wt_seq,
+            position_to_index=position_to_index,
+            mars_score=cand.decoder_score,
+        )
+        mo_candidates.append(
+            MultiObjectiveCandidate(
+                sequence=cand.sequence,
+                mutations=cand.mutations,
+                raw_scores={"decoder_score": cand.decoder_score},
+                objectives=objectives,
+            )
+        )
+
+    # Rank using specified method
+    ranked = rank_candidates_multi_objective(
+        candidates=mo_candidates,
+        method=method,
+        weights=weights,
+        top_k=top_k,
+    )
+
+    # Convert back to DecodedCandidateMO
+    result: list[DecodedCandidateMO] = []
+    for mo_cand in ranked:
+        # Find original candidate or create new one
+        original = next((c for c in decoded_candidates if c.sequence == mo_cand.sequence), None)
+        if original:
+            original.objectives = mo_cand.objectives
+            original.pareto_rank = mo_cand.rank
+            original.crowding_distance = mo_cand.crowding_distance
+            result.append(original)
+
+    return result
+
+
+def get_pareto_front_sequences(
+    decoded_candidates: list[DecodedCandidateMO],
+    wt_seq: str,
+    position_to_index: dict[int, int],
+) -> list[str]:
+    """
+    Get sequences from the Pareto front.
+
+    Returns sequences that are Pareto-optimal (non-dominated).
+    """
+    mo_candidates = []
+    for cand in decoded_candidates:
+        objectives = compute_candidate_objectives(
+            sequence=cand.sequence,
+            wt_seq=wt_seq,
+            position_to_index=position_to_index,
+            mars_score=cand.decoder_score,
+        )
+        mo_candidates.append(
+            MultiObjectiveCandidate(
+                sequence=cand.sequence,
+                mutations=cand.mutations,
+                raw_scores={"decoder_score": cand.decoder_score},
+                objectives=objectives,
+            )
+        )
+
+    pareto_front = compute_pareto_front(mo_candidates)
+    return [c.sequence for c in pareto_front]
+
+
+def merge_multi_objective_ranks(
+    candidates_a: list[DecodedCandidateMO],
+    candidates_b: list[DecodedCandidateMO],
+    wt_seq: str,
+    position_to_index: dict[int, int],
+) -> list[DecodedCandidateMO]:
+    """
+    Merge candidates from two sources using multi-objective optimization.
+
+    Useful for combining candidates from different decoders or design strategies.
+    """
+    all_candidates = list(candidates_a) + list(candidates_b)
+
+    # Compute objectives for all
+    mo_candidates = []
+    for cand in all_candidates:
+        objectives = compute_candidate_objectives(
+            sequence=cand.sequence,
+            wt_seq=wt_seq,
+            position_to_index=position_to_index,
+            mars_score=cand.decoder_score,
+        )
+        mo_candidates.append(
+            MultiObjectiveCandidate(
+                sequence=cand.sequence,
+                mutations=cand.mutations,
+                raw_scores={"decoder_score": cand.decoder_score},
+                objectives=objectives,
+            )
+        )
+
+    # Get Pareto front
+    pareto_front = compute_pareto_front(mo_candidates)
+    crowding_distance(mo_candidates)
+
+    # Map back and sort
+    result: list[DecodedCandidateMO] = []
+    for mo_cand in sorted(mo_candidates, key=lambda c: (c.rank, -c.crowding_distance)):
+        original = next((c for c in all_candidates if c.sequence == mo_cand.sequence), None)
+        if original:
+            original.objectives = mo_cand.objectives
+            original.pareto_rank = mo_cand.rank
+            original.crowding_distance = mo_cand.crowding_distance
+            result.append(original)
+
+    # Deduplicate by sequence
+    seen: set[str] = set()
+    unique_result: list[DecodedCandidateMO] = []
+    for cand in result:
+        if cand.sequence not in seen:
+            seen.add(cand.sequence)
+            unique_result.append(cand)
+
+    return unique_result
