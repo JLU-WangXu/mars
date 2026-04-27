@@ -1,6 +1,23 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import hashlib
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from .cache_manager import MARSCacheManager
+from .physics_constraints import (
+    compute_constraint_penalty,
+    get_constraint_summary,
+    validate_sequence_constraints,
+    CHARGED_POSITIVE,
+    CHARGED_NEGATIVE,
+    CLASH_DISTANCE,
+)
+
+if TYPE_CHECKING:
+    from .online_learner import OnlineLearner
 
 
 @dataclass
@@ -35,11 +52,21 @@ class ConstrainedBeamDecoder:
         max_candidates: int = 64,
         mutation_penalty: float = 0.15,
         require_change: bool = True,
+        enable_physics_constraints: bool = True,
+        constraint_weight: float = 1.0,
+        max_constraint_violations: int = 3,
+        learner: "OnlineLearner | None" = None,
+        learning_reward_scale: float = 1.0,
     ) -> None:
         self.beam_size = int(beam_size)
         self.max_candidates = int(max_candidates)
         self.mutation_penalty = float(mutation_penalty)
         self.require_change = bool(require_change)
+        self.enable_physics_constraints = bool(enable_physics_constraints)
+        self.constraint_weight = float(constraint_weight)
+        self.max_constraint_violations = int(max_constraint_violations)
+        self.learner = learner
+        self.learning_reward_scale = float(learning_reward_scale)
 
     def decode(
         self,
@@ -47,6 +74,10 @@ class ConstrainedBeamDecoder:
         position_to_index: dict[int, int],
         fields: list[PositionField],
         pairwise_energies: dict[tuple[int, int], dict[tuple[str, str], float]] | None = None,
+        pair_distances: dict[tuple[int, int], float] | None = None,
+        sasa_map: dict[int, float] | None = None,
+        existing_disulfides: set[tuple[int, int]] | None = None,
+        core_positions: set[int] | None = None,
     ) -> list[DecodedCandidate]:
         # State: (score, sequence_tuple, mutation_tuple, support_frozenset)
         beam: list[tuple[float, tuple[str, ...], tuple[str, ...], frozenset[str]]] = [
@@ -54,9 +85,16 @@ class ConstrainedBeamDecoder:
         ]
         ordered_fields = sorted(fields, key=lambda item: item.position)
         pairwise_energies = pairwise_energies or {}
+        pair_distances = pair_distances or {}
+        sasa_map = sasa_map or {}
+        existing_disulfides = existing_disulfides or set()
+        core_positions = core_positions or set()
 
         # Pre-compute previous indices for each field position
         field_positions = [f.position for f in ordered_fields]
+
+        # Cache constraint data for validation
+        constraint_cache: dict[tuple[str, ...], float] = {}
 
         for field_idx, field in enumerate(ordered_fields):
             seq_idx = position_to_index[field.position]
@@ -106,6 +144,27 @@ class ConstrainedBeamDecoder:
                     else:
                         new_support_sources = support_sources
 
+                    # Apply physics constraints if enabled
+                    constraint_penalty = 0.0
+                    if self.enable_physics_constraints and pair_distances:
+                        # Use cached constraint penalty if available
+                        if new_chars in constraint_cache:
+                            constraint_penalty = constraint_cache[new_chars]
+                        else:
+                            constraint_penalty = compute_constraint_penalty(
+                                seq=new_chars,
+                                position_to_index=position_to_index,
+                                field_positions=field_positions,
+                                pair_distances=pair_distances,
+                                sasa_map=sasa_map,
+                                existing_disulfides=existing_disulfides,
+                                core_positions=core_positions,
+                            )
+                            # Cache the constraint penalty for reuse
+                            constraint_cache[new_chars] = constraint_penalty
+
+                        updated_score += constraint_penalty * self.constraint_weight
+
                     next_beam.append((updated_score, new_chars, new_mutations, new_support_sources))
 
             # Sort and prune beam - use mutation_count directly (pre-computed)
@@ -119,14 +178,30 @@ class ConstrainedBeamDecoder:
             )
             beam = next_beam[: self.beam_size]
 
+        # Post-filter candidates by constraint violations
         candidates: list[DecodedCandidate] = []
         seen_sequences: set[str] = set()
+
         for score, seq_chars, mutations, support_sources in beam:
             if self.require_change and not mutations:
                 continue
             sequence = "".join(seq_chars)
             if sequence in seen_sequences:
                 continue
+
+            # Validate physics constraints for final candidates
+            if self.enable_physics_constraints and pair_distances and sasa_map:
+                result = validate_sequence_constraints(
+                    sequence=sequence,
+                    residue_numbers=field_positions,
+                    pair_distances=pair_distances,
+                    sasa_map=sasa_map,
+                    existing_disulfides=existing_disulfides,
+                    core_positions=core_positions,
+                )
+                if len(result.violations) > self.max_constraint_violations:
+                    continue
+
             seen_sequences.add(sequence)
             candidates.append(
                 DecodedCandidate(
