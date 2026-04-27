@@ -30,6 +30,9 @@ Do **not** describe it as:
 
 ---
 
+<img width="2816" height="1536" alt="b493a07dec8264e6f78fe7f392cf4442" src="https://github.com/user-attachments/assets/9d5847a2-6654-4239-ae36-57e42e9bf178" />
+
+
 ## 2. What Works / 当前已经完成什么
 
 **EN**
