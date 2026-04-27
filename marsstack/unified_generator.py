@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, Any
+from typing import Literal, Any, Callable
 
 from .decoder import PositionField, ResidueOption
 from .multi_objective import (
@@ -24,6 +24,17 @@ from .ensemble_ranker import (
     rank_candidates,
     analyze_feature_importance,
     FEATURE_NAMES,
+)
+from .sensitivity_analysis import (
+    analyze_generator_sensitivity,
+    compute_parameter_sensitivity,
+    compute_score_robustness,
+    rank_positions_by_sensitivity,
+    identify_critical_sites,
+    PerturbationResult,
+    StabilityAssessment,
+    CriticalSite,
+    SensitivityResult,
 )
 
 

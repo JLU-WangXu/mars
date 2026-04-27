@@ -15,6 +15,33 @@ from .physics_constraints import (
     CHARGED_NEGATIVE,
     CLASH_DISTANCE,
 )
+from .disulfide_design import (
+    DisulfideConstraint,
+    DisulfideDesignResult,
+    compute_disulfide_penalty,
+    design_disulfide_bonds,
+    get_design_summary,
+    get_disulfide_summary,
+    filter_candidate_pairs,
+    predict_disulfide_formation,
+    suggest_cysteine_mutations,
+    MIN_SS_DISTANCE,
+    MAX_SS_DISTANCE,
+)
+from .diversity_metrics import (
+    DiversityConfig,
+    DiversityTracker,
+    DiversityMetrics,
+    compute_diversity_penalty,
+    compute_all_diversity_metrics,
+)
+from .mutation_predictor import (
+    MutationEffect,
+    ThermostabilityScore,
+    compute_beam_search_mutation_bonus,
+    predict_ddg,
+    score_sequence_thermostability,
+)
 
 if TYPE_CHECKING:
     from .online_learner import OnlineLearner
@@ -43,6 +70,8 @@ class DecodedCandidate:
     decoder_score: float
     mutation_count: int
     supporting_sources: list[str]
+    thermostability_score: ThermostabilityScore | None = None
+    mutation_effects: list[MutationEffect] | None = None
 
 
 class ConstrainedBeamDecoder:
@@ -57,6 +86,9 @@ class ConstrainedBeamDecoder:
         max_constraint_violations: int = 3,
         learner: "OnlineLearner | None" = None,
         learning_reward_scale: float = 1.0,
+        diversity_config: DiversityConfig | None = None,
+        use_diversity_penalty: bool = False,
+        use_diversity_selection: bool = False,
     ) -> None:
         self.beam_size = int(beam_size)
         self.max_candidates = int(max_candidates)
@@ -67,6 +99,37 @@ class ConstrainedBeamDecoder:
         self.max_constraint_violations = int(max_constraint_violations)
         self.learner = learner
         self.learning_reward_scale = float(learning_reward_scale)
+        self.diversity_config = diversity_config or DiversityConfig()
+        self.use_diversity_penalty = use_diversity_penalty
+        self.use_diversity_selection = use_diversity_selection
+        self._diversity_tracker: DiversityTracker | None = None
+
+    def _init_diversity_tracker(self, wt_seq: str) -> DiversityTracker:
+        """Initialize diversity tracker for this decode run."""
+        self._diversity_tracker = DiversityTracker(
+            config=self.diversity_config,
+            history=[],
+            current_diversity=DiversityMetrics(),
+        )
+        return self._diversity_tracker
+
+    def _apply_diversity_penalty(
+        self,
+        new_sequence: str,
+        existing_sequences: list[str],
+    ) -> float:
+        """Compute diversity penalty for a new candidate."""
+        if not self.use_diversity_penalty or not existing_sequences:
+            return 0.0
+        return compute_diversity_penalty(
+            new_sequence, existing_sequences, self.diversity_config
+        )
+
+    def _get_adaptive_diversity_penalty(self) -> float:
+        """Get adaptive penalty from tracker if available."""
+        if self._diversity_tracker:
+            return self._diversity_tracker.get_adaptive_penalty()
+        return self.diversity_config.diversity_penalty
 
     def decode(
         self,
@@ -165,7 +228,23 @@ class ConstrainedBeamDecoder:
 
                         updated_score += constraint_penalty * self.constraint_weight
 
+                    # Apply diversity penalty if enabled
+                    if self.use_diversity_penalty and next_beam:
+                        existing_seqs = [seq for _, seq, _, _ in next_beam]
+                        diversity_penalty = self._apply_diversity_penalty(
+                            "".join(new_chars), existing_seqs
+                        )
+                        updated_score -= diversity_penalty
+
                     next_beam.append((updated_score, new_chars, new_mutations, new_support_sources))
+
+            # Apply diversity-aware selection if enabled
+            if self.use_diversity_selection and next_beam:
+                if self._diversity_tracker is None:
+                    self._init_diversity_tracker(wt_seq)
+                seq_chars_list = [c[1] for c in next_beam]
+                mutations_list = [list(c[2]) for c in next_beam]
+                self._diversity_tracker.update(seq_chars_list, mutations_list, wt_seq)
 
             # Sort and prune beam - use mutation_count directly (pre-computed)
             next_beam.sort(
@@ -215,3 +294,23 @@ class ConstrainedBeamDecoder:
             if len(candidates) >= self.max_candidates:
                 break
         return candidates
+
+    def get_diversity_metrics(
+        self,
+        sequences: list[str],
+        mutations_list: list[list[str]],
+        wt_seq: str,
+    ) -> DiversityMetrics:
+        """Get diversity metrics for a set of sequences.
+
+        Args:
+            sequences: List of designed sequences
+            mutations_list: List of mutations for each sequence
+            wt_seq: Wild-type sequence
+
+        Returns:
+            Computed diversity metrics
+        """
+        return compute_all_diversity_metrics(
+            sequences, mutations_list, wt_seq, self.diversity_config
+        )
