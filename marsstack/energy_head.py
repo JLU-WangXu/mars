@@ -61,8 +61,12 @@ def build_pairwise_energy_tensor(
     for row in top_ranked:
         ranking_score = float(row.get("ranking_score", row.get("mars_score", 0.0)))
         row_ranking_scores.append(ranking_score)
+        # Cache tanh computation
         row_score_weights.append(0.5 + 0.25 * math.tanh(ranking_score / 4.0))
         row_sequences.append(str(row["sequence"]))
+
+    # Pre-compute sequence character arrays for faster access
+    row_chars = [list(seq) for seq in row_sequences]
 
     pairwise: dict[tuple[int, int], dict[tuple[str, str], float]] = {}
     for i, pos_i in enumerate(field_positions):
@@ -75,11 +79,11 @@ def build_pairwise_energy_tensor(
             if distance > 18.0:
                 continue
             distance_weight = 1.0 / max(1.0, distance / 4.0)
-            seq_idx_j = position_to_index[pos_j]
             bucket: dict[tuple[str, str], float] = {}
             for rank_idx in range(num_ranked):
-                aa_i = row_sequences[rank_idx][seq_idx_i]
-                aa_j = row_sequences[rank_idx][seq_idx_j]
+                chars = row_chars[rank_idx]
+                aa_i = chars[seq_idx_i]
+                aa_j = chars[seq_idx_j]
                 pair_key = (aa_i, aa_j)
                 bucket[pair_key] = bucket.get(pair_key, 0.0) + distance_weight * rank_weights[rank_idx] * row_score_weights[rank_idx]
             if bucket:

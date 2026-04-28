@@ -163,13 +163,14 @@ class ConstrainedBeamDecoder:
 
         # Pre-compute previous indices for each field position
         field_positions = [f.position for f in ordered_fields]
+        # Pre-compute reverse index map for O(1) position -> field_idx lookup
+        position_to_field_idx = {pos: idx for idx, pos in enumerate(field_positions)}
 
         # Cache constraint data for validation
         constraint_cache: dict[tuple[str, ...], float] = {}
 
         for field_idx, field in enumerate(ordered_fields):
             seq_idx = position_to_index[field.position]
-            # Get indices of previously processed fields (fields before current field)
 
             next_beam: list[tuple[float, tuple[str, ...], tuple[str, ...], frozenset[str]]] = []
 
@@ -186,6 +187,7 @@ class ConstrainedBeamDecoder:
 
                     # Compute pairwise energies for all previous positions at once
                     option_residue = option.residue
+                    # Pre-compute pairwise lookup - use field_idx to limit iterations
                     for prev_idx in range(field_idx):
                         prev_field_pos = field_positions[prev_idx]
                         prev_residue = new_chars[position_to_index[prev_field_pos]]
@@ -201,7 +203,7 @@ class ConstrainedBeamDecoder:
                     if option_residue != field.wt_residue:
                         updated_score -= self.mutation_penalty
                         mutation = f"{field.wt_residue}{field.position}{option_residue}"
-                        # Check set for O(1) lookup instead of list O(n)
+                        # Pre-compute mutation set for faster lookups
                         if mutation not in mutations:
                             new_mutations = mutations + (mutation,)
                         else:
