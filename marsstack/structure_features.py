@@ -147,14 +147,17 @@ class StructureThermalProfile:
 
 
 def _fibonacci_sphere(n_points: int = 64) -> np.ndarray:
-    pts: list[tuple[float, float, float]] = []
+    # Pre-compute constants for faster sphere generation
     phi = math.pi * (3.0 - math.sqrt(5.0))
+    pts = np.empty((n_points, 3), dtype=float)
     for i in range(n_points):
         y = 1 - (i / (n_points - 1)) * 2
         r = math.sqrt(max(0.0, 1 - y * y))
         theta = phi * i
-        pts.append((math.cos(theta) * r, y, math.sin(theta) * r))
-    return np.array(pts, dtype=float)
+        pts[i, 0] = math.cos(theta) * r
+        pts[i, 1] = y
+        pts[i, 2] = math.sin(theta) * r
+    return pts
 
 
 def _extract_disulfides(pdb_path: Path, chain: str) -> set[int]:
@@ -240,14 +243,21 @@ def _calculate_local_b_density(
     """Calculate local B-factor density around a residue."""
     if not residues[res_idx]["atoms"]:
         return 0.0
-    center_pos = np.mean([atoms[i]["pos"] for i in residues[res_idx]["atoms"]], axis=0)
+    # Pre-compute center position once
+    atom_indices = residues[res_idx]["atoms"]
+    center_pos = np.mean([atoms[i]["pos"] for i in atom_indices], axis=0)
     nearby_b = []
-    for r_idx in range(max(0, res_idx - window), min(len(residues), res_idx + window + 1)):
+    # Vectorized distance computation for nearby residues
+    r_start = max(0, res_idx - window)
+    r_end = min(len(residues), res_idx + window + 1)
+    for r_idx in range(r_start, r_end):
         if not residues[r_idx]["atoms"]:
             continue
         for atom_idx in residues[r_idx]["atoms"]:
-            dist = np.linalg.norm(atoms[atom_idx]["pos"] - center_pos)
-            if dist < 10.0:  # Within 10 Angstrom
+            # Use squared distance for faster computation
+            diff = atoms[atom_idx]["pos"] - center_pos
+            dist_sq = np.dot(diff, diff)
+            if dist_sq < 100.0:  # 10.0^2
                 nearby_b.append(atoms[atom_idx]["bf"])
     return np.mean(nearby_b) if nearby_b else 0.0
 
@@ -267,9 +277,10 @@ def _calculate_flexibility_index(
     """Calculate flexibility index (0 = rigid, 1 = highly flexible)."""
     if std_b == 0:
         return 0.5
-    b_contribution = min(1.0, max(0.0, (b_factor - mean_b) / (3 * std_b) + 0.5))
+    # Pre-compute once and clamp
+    b_contribution = min(1.0, max(0.0, (b_factor - mean_b) / (3.0 * std_b) + 0.5))
     sasa_contribution = 0.5 if sasa >= threshold else 0.3
-    return (b_contribution * 0.7 + sasa_contribution * 0.3)
+    return b_contribution * 0.7 + sasa_contribution * 0.3
 
 
 def analyze_structure(
